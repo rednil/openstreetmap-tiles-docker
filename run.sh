@@ -78,7 +78,29 @@ import () {
 
     $asweb osm2pgsql --slim --cache $OSM_IMPORT_CACHE --database gis --number-processes $number_processes $import
 }
-
+import_contours (){
+    drop_contours
+    i=1
+    for f in /data/*.hgt
+    do
+        name="$(dirname $f)/$(basename $f .hgt)"        
+        gdal_contour -i 10 -snodata 32767 -a height $f $name.shp
+        if test $i -ge 1;
+        then
+        shp2pgsql -c -I -g way $name contours | $asweb psql -q gis
+        i=0
+        else
+        shp2pgsql -a -I -g way $name contours | sed '/^CREATE INDEX/ d' | $asweb psql -q gis
+        fi
+    done
+}
+drop_contours (){
+    rm /data/*.prj
+    rm /data/*.shx
+    rm /data/*.shp
+    rm /data/*.dbf
+    $asweb psql -d gis -c "DROP TABLE contours;"
+}
 dropdb () {
     echo "Dropping database"
     cd /var/www
