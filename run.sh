@@ -23,15 +23,15 @@ startdb () {
 
 initdb () {
     echo "Initialising postgresql"
-    if [ -d /var/lib/postgresql/9.3/main ] && [ $( ls -A /var/lib/postgresql/9.3/main | wc -c ) -ge 0 ]
+    if [ -d /data/postgresql/9.3/main ] && [ $( ls -A /data/postgresql/9.3/main | wc -c ) -ge 0 ]
     then
-        die "Initialisation failed: the directory is not empty: /var/lib/postgresql/9.3/main"
+        die "Initialisation failed: the directory is not empty: /data/postgresql/9.3/main"
     fi
 
-    mkdir -p /var/lib/postgresql/9.3/main && chown -R postgres /var/lib/postgresql/
-    sudo -u postgres -i /usr/lib/postgresql/9.3/bin/initdb --pgdata /var/lib/postgresql/9.3/main
-    ln -s /etc/ssl/certs/ssl-cert-snakeoil.pem /var/lib/postgresql/9.3/main/server.crt
-    ln -s /etc/ssl/private/ssl-cert-snakeoil.key /var/lib/postgresql/9.3/main/server.key
+    mkdir -p /data/postgresql/9.3/main && chown -R postgres /data/postgresql/
+    sudo -u postgres -i /usr/lib/postgresql/9.3/bin/initdb --pgdata /data/postgresql/9.3/main
+    ln -s /etc/ssl/certs/ssl-cert-snakeoil.pem /data/postgresql/9.3/main/server.crt
+    ln -s /etc/ssl/private/ssl-cert-snakeoil.key /data/postgresql/9.3/main/server.key
 }
 
 createuser () {
@@ -57,48 +57,68 @@ createdb () {
     # Add the 900913 Spatial Reference System
     $asweb psql -d $dbname -f /usr/local/share/osm2pgsql/900913.sql
 }
-
-import () {
-    # Find the most recent import.pbf or import.osm
-    import=$( ls -1t /data/import.pbf /data/import.osm 2>/dev/null | head -1 )
-    test -n "${import}" || \
-        die "No import file present: expected /data/import.osm or /data/import.pbf"
-
-    echo "Importing ${import} into gis"
-    echo "$OSM_IMPORT_CACHE" | grep -P '^[0-9]+$' || \
-        die "Unexpected cache type: expected an integer but found: ${OSM_IMPORT_CACHE}"
-
-    number_processes=`nproc`;
-    if test $number_processes -ge 8; then # Limit to 8 to prevent overwhelming pg with connections
-        number_processes=8;
-    fi
-    $asweb osm2pgsql --slim --cache $OSM_IMPORT_CACHE --database gis --number-processes $number_processes $import
+import_osm (){
+	i=0
+	for f in "/data/*.pbf /data/*.osm"
+	do
+		mkdir -p /data/imported
+		echo "Importing ${import} into gis"
+    		echo "$OSM_IMPORT_CACHE" | grep -P '^[0-9]+$' || \
+        		die "Unexpected cache type: expected an integer but found: ${OSM_IMPORT_CACHE}"
+    		number_processes=`nproc`;
+    		if test $number_processes -ge 8; then # Limit to 8 to prevent overwhelming pg with connections
+        		number_processes=8;
+    		fi
+    		$asweb osm2pgsql --slim --cache $OSM_IMPORT_CACHE --database gis --number-processes $number_processes $f
+		mv $f /data/imported
+		i=$(i+1)
+	done
+ 	test $i -gt 0 || \
+		echo "No OSM data imported. Place *.osm or *.pbf files into data directory in order to import."
 }
-import_contours (){
+import_srtm (){
+	_import_contours
+	_render_relief
+	mkdir - p /data/imported
+	mv *.hgt /data/imported
+}
+_import_contours (){
 	drop_contours
+	mkdir -p /data/tmp
 	i=1
 	for f in /data/*.hgt
 	do
-		name="$(dirname $f)/$(basename $f .hgt)"
+		name="$(dirname $f)/tmp/$(basename $f .hgt)"
+		# Create contour lines with 10m spacing
 		gdal_contour -i 10 -snodata 32767 -a height $f $name.shp
+		# place the contour lines into the postgres database. create the table 
+		# in case this is the first round, otherwise append.  
 		if test $i -ge 1;
 		then
 			shp2pgsql -c -I -g way $name contours | $asweb psql -q gis
 			i=0
 		else
+			# Even though we chose to append the data, shp2pgsql tries to create an index
+			# which is already there. Is this a bug?
 			shp2pgsql -a -I -g way $name contours | sed '/^CREATE INDEX/ d' | $asweb psql -q gis
 		fi
+		# remove all temporary files, i.e. .prj, .shx, .shp and .dbf
+		rm $name.*
 	done
 }
 import_styles (){
-	awk 'NR==FNR{a[$1]=$2;next}{ for (i in a) gsub(i,a[i])}1' /import/zoom-to-scale.txt /import/layer-contours.xml.inc >/usr/local/src/mapnik-style/inc/layer-contours.xml.inc
+	awk 'NR==FNR{a[$1]=$2;next}{ for (i in a) gsub(i,a[i])}1' /data/zoom-to-scale.txt /data/layer-contours.xml.inc >/usr/local/src/mapnik-style/inc/layer-contours.xml.inc
 }        
-render_relief (){
-	rm /data/*.tif
-	gdal_merge.py -v -o /data/merged.tif /import/*.hgt
-        gdalwarp -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /data/merged.tif /data/warped.tif
-	gdaldem hillshade /data/warped.tif /data/hillshade.tif -z 2
-	gdaldem color-relief /data/warped.tif /data/colors.txt /data/color-relief.tif
+_render_relief (){
+	rm -rf /data/tiff
+	mkdir -p /data/tiff
+	mkdir -p /data/tmp
+	rm -rf /data/tmp/merged.tif
+	rm -rf /data/tmp/warped.tif
+	gdal_merge.py -v -o /data/tmp/merged.tif /data/*.hgt
+        gdalwarp -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /data/tmp/merged.tif /data/tmp/warped.tif
+	gdaldem hillshade /data/tmp/warped.tif /data/tiff/hillshade.tif -z 2
+	gdaldem color-relief /data/tmp/warped.tif /data/colors.txt /data/tiff/relief.tif
 }
 clear_cache (){
 	sv stop renderd
@@ -106,10 +126,6 @@ clear_cache (){
 	_startservice renderd
 }
 drop_contours (){
-	rm /data/*.prj
-	rm /data/*.shx
-	rm /data/*.shp
-	rm /data/*.dbf
 	$asweb psql -d gis -c "DROP TABLE contours;"
 }
 dropdb () {
