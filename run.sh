@@ -68,38 +68,49 @@ import () {
     echo "$OSM_IMPORT_CACHE" | grep -P '^[0-9]+$' || \
         die "Unexpected cache type: expected an integer but found: ${OSM_IMPORT_CACHE}"
 
-    number_processes=`nproc`
-
-    # Limit to 8 to prevent overwhelming pg with connections
-    if test $number_processes -ge 8
-    then
-        number_processes=8
+    number_processes=`nproc`;
+    if test $number_processes -ge 8; then # Limit to 8 to prevent overwhelming pg with connections
+        number_processes=8;
     fi
-
     $asweb osm2pgsql --slim --cache $OSM_IMPORT_CACHE --database gis --number-processes $number_processes $import
 }
 import_contours (){
-    drop_contours
-    i=1
-    for f in /data/*.hgt
-    do
-        name="$(dirname $f)/$(basename $f .hgt)"        
-        gdal_contour -i 10 -snodata 32767 -a height $f $name.shp
-        if test $i -ge 1;
-        then
-        shp2pgsql -c -I -g way $name contours | $asweb psql -q gis
-        i=0
-        else
-        shp2pgsql -a -I -g way $name contours | sed '/^CREATE INDEX/ d' | $asweb psql -q gis
-        fi
-    done
+	drop_contours
+	i=1
+	for f in /data/*.hgt
+	do
+		name="$(dirname $f)/$(basename $f .hgt)"
+		gdal_contour -i 10 -snodata 32767 -a height $f $name.shp
+		if test $i -ge 1;
+		then
+			shp2pgsql -c -I -g way $name contours | $asweb psql -q gis
+			i=0
+		else
+			shp2pgsql -a -I -g way $name contours | sed '/^CREATE INDEX/ d' | $asweb psql -q gis
+		fi
+	done
+}
+import_styles (){
+	awk 'NR==FNR{a[$1]=$2;next}{ for (i in a) gsub(i,a[i])}1' /import/zoom-to-scale.txt /import/layer-contours.xml.inc >/usr/local/src/mapnik-style/inc/layer-contours.xml.inc
+}        
+render_relief (){
+	rm /data/*.tif
+	gdal_merge.py -v -o /data/merged.tif /import/*.hgt
+        gdalwarp -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /data/merged.tif /data/warped.tif
+	gdaldem hillshade /data/warped.tif /data/hillshade.tif -z 2
+	gdaldem color-relief /data/warped.tif /data/colors.txt /data/color-relief.tif
+}
+clear_cache (){
+	sv stop renderd
+	rm -rf /var/lib/mod_tile/default
+	_startservice renderd
 }
 drop_contours (){
-    rm /data/*.prj
-    rm /data/*.shx
-    rm /data/*.shp
-    rm /data/*.dbf
-    $asweb psql -d gis -c "DROP TABLE contours;"
+	rm /data/*.prj
+	rm /data/*.shx
+	rm /data/*.shp
+	rm /data/*.dbf
+	$asweb psql -d gis -c "DROP TABLE contours;"
 }
 dropdb () {
     echo "Dropping database"
