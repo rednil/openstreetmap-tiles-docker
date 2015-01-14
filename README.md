@@ -2,8 +2,8 @@
 
 This repository contains instructions for building a
 [Docker](https://www.docker.io/) image containing the OpenStreetMap tile
-serving software stack.  It is based on the
-[Switch2OSM instructions](http://switch2osm.org/serving-tiles/manually-building-a-tile-server-12-04/).
+serving software stack, including [contours and a colored relief](http://wiki.openstreetmap.org/wiki/HikingBikingMaps) from elevation data. It is based on the
+[Switch2OSM instructions](http://switch2osm.org/serving-tiles/manually-building-a-tile-server-14-04/).
 
 As well as providing an easy way to set up and run the tile serving software it
 also provides instructions for managing the back end database, allowing you to:
@@ -12,7 +12,7 @@ also provides instructions for managing the back end database, allowing you to:
 * Import OSM data into the database
 * Drop the database
 
-Run `docker run homme/openstreetmap-tiles` for usage instructions.
+Run `docker run XXX` for usage instructions.
 
 ## About
 
@@ -30,7 +30,7 @@ includes:
 
 ## Issues
 
-This is a work in progress and although generally adequate it could benefit
-from improvements.  Please
-[submit issues](https://github.com/geo-data/openstreetmap-tiles-docker/issues)
-on GitHub. Pull requests are very welcome!
+This is a work in progress, for a stable version see its [origin](https://github.com/geo-data/openstreetmap-tiles-docker) (without contours and color relief).
+* When running the container using the "aufs" storage backend (default in Ubuntu 14.04), I ran into a [permission issue](https://github.com/geo-data/openstreetmap-tiles-docker/issues/3). I resolved it by switching to the devicemapper backend.
+* I encountered difficulties building this container using the devicemapper driver and filed a [docker issue](https://github.com/docker/docker/issues/10089).
+
