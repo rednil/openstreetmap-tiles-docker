@@ -6,8 +6,8 @@
 
 # If the database has been persisted in a volume, it may need
 # permissions setting.
-chown -R postgres /var/lib/postgresql/ || exit 1
+chown -R postgres /data/postgresql/ || exit 1
 
 exec /sbin/setuser postgres /usr/lib/postgresql/9.3/bin/postgres \
-    -D /var/lib/postgresql/9.3/main \
+    -D /data/postgresql/9.3/main \
     -c config_file=/etc/postgresql/9.3/main/postgresql.conf

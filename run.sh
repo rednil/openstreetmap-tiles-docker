@@ -118,7 +118,7 @@ _render_relief (){
 	gdal_merge.py -v -o /data/tmp/merged.tif /data/*.hgt
         gdalwarp -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /data/tmp/merged.tif /data/tmp/warped.tif
 	gdaldem hillshade /data/tmp/warped.tif /data/tiff/hillshade.tif -z 2
-	gdaldem color-relief /data/tmp/warped.tif /data/colors.txt /data/tiff/relief.tif
+	gdaldem color-relief /data/tmp/warped.tif /usr/local/src/mapnik-style/relief-colors.txt /data/tiff/relief.tif
 }
 clear_cache (){
 	sv stop renderd
