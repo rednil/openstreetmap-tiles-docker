@@ -16,11 +16,15 @@ die () {
 _startservice () {
     sv start $1 || die "Could not start $1"
 }
-
+_stopservice (){
+	sv stop $1 || die "Could not stop $1"
+}
 startdb () {
     _startservice postgresql
 }
-
+testcontours (){
+	_import_contours "append" 
+}
 initdb () {
     echo "Initialising postgresql"
     if [ -d /data/postgresql/9.3/main ] && [ $( ls -A /data/postgresql/9.3/main | wc -c ) -ge 0 ]
@@ -57,10 +61,32 @@ createdb () {
     # Add the 900913 Spatial Reference System
     $asweb psql -d $dbname -f /usr/local/share/osm2pgsql/900913.sql
 }
+fromscratch (){
+	_stopservice postgresql
+	rm -rf /data/postgresql
+	initdb
+	startdb
+	createuser
+	cleanimport
+	startservices
+}
+redofromscratch () {
+	mv /data/imported/* /data/
+	fromscratch
+}
+cleanimport (){
+	import_from_scratch=true
+	dropdb
+	dropdem
+	createdb
+	import_osm
+	import_dem
+}
 import_osm (){
-	i=0
-	for f in "/data/*.pbf /data/*.osm"
+	imported_something=false
+	for f in /data/*.osm
 	do
+	    if [ -f "$f" ]; then
 		mkdir -p /data/imported
 		echo "Importing ${import} into gis"
     		echo "$OSM_IMPORT_CACHE" | grep -P '^[0-9]+$' || \
@@ -71,46 +97,56 @@ import_osm (){
     		fi
     		$asweb osm2pgsql --slim --cache $OSM_IMPORT_CACHE --database gis --number-processes $number_processes $f
 		mv $f /data/imported
-		i=$(i+1)
+		imported_something=true
+	    fi
 	done
- 	test $i -gt 0 || \
-		echo "No OSM data imported. Place *.osm or *.pbf files into data directory in order to import."
+ 	test !$imported_something && echo "No OSM data imported. Place *.osm or *.pbf files into data directory in order to import."
 }
-import_srtm (){
+import_dem (){
 	_import_contours
 	_render_relief
 	mkdir - p /data/imported
 	mv *.hgt /data/imported
 }
 _import_contours (){
-	drop_contours
-	mkdir -p /data/tmp
-	i=1
+	mkdir -p /data/tmp	
+	first=true
+	imported_something=false
 	for f in /data/*.hgt
 	do
+	    if [ -f "$f"  ]; then
 		name="$(dirname $f)/tmp/$(basename $f .hgt)"
 		# Create contour lines with 10m spacing
-		gdal_contour -i 10 -snodata 32767 -a height $f $name.shp
+		echo "Rendering contour lines from $f"
+		gdal_contour -i 1000 -snodata 32767 -a height $f $name.shp
 		# place the contour lines into the postgres database. create the table 
-		# in case this is the first round, otherwise append.  
-		if test $i -ge 1;
+		# in case this is the first round, otherwise append.
+		imported_something=true  
+		echo "Placing contour lines into Postgres DB"
+		if [ "$1" != "append" ] && [ $first = true ];
 		then
+			echo "Creating contour Table"
 			shp2pgsql -c -I -g way $name contours | $asweb psql -q gis
-			i=0
-		else
+			first=false
+		else	
+			#echo "append $append"
 			# Even though we chose to append the data, shp2pgsql tries to create an index
 			# which is already there. Is this a bug?
 			shp2pgsql -a -I -g way $name contours | sed '/^CREATE INDEX/ d' | $asweb psql -q gis
 		fi
 		# remove all temporary files, i.e. .prj, .shx, .shp and .dbf
 		rm $name.*
+	    fi
 	done
+	echo "done $imported_something"
+ 	test !$imported_something && echo "No DEM data imported. Place *.hgt files into data directory in order to import."
+
 }
-import_styles (){
+_import_styles (){
 	awk 'NR==FNR{a[$1]=$2;next}{ for (i in a) gsub(i,a[i])}1' /data/zoom-to-scale.txt /data/layer-contours.xml.inc >/usr/local/src/mapnik-style/inc/layer-contours.xml.inc
 }        
 _render_relief (){
-	rm -rf /data/tiff
+	dropdem
 	mkdir -p /data/tiff
 	mkdir -p /data/tmp
 	rm -rf /data/tmp/merged.tif
@@ -118,7 +154,9 @@ _render_relief (){
 	gdal_merge.py -v -o /data/tmp/merged.tif /data/*.hgt
         gdalwarp -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /data/tmp/merged.tif /data/tmp/warped.tif
 	gdaldem hillshade /data/tmp/warped.tif /data/tiff/hillshade.tif -z 2
-	gdaldem color-relief /data/tmp/warped.tif /usr/local/src/mapnik-style/relief-colors.txt /data/tiff/relief.tif
+	gdaldem color-relief /data/tmp/warped.tif /usr/local/src/mapnik-style/colors.txt /data/tiff/relief.tif
+	rm -rf /data/tmp/merged.tif
+        rm -rf /data/tmp/warped.tif
 }
 clear_cache (){
 	sv stop renderd
@@ -127,6 +165,9 @@ clear_cache (){
 }
 drop_contours (){
 	$asweb psql -d gis -c "DROP TABLE contours;"
+}
+dropdem (){
+	rm -rf /data/tiff 
 }
 dropdb () {
     echo "Dropping database"
