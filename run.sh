@@ -62,27 +62,28 @@ createdb () {
     $asweb psql -d $dbname -f /usr/local/share/osm2pgsql/900913.sql
 }
 fromscratch (){
-	_stopservice postgresql
+	#_stopservice postgresql would do a smart shutdown, which most times doesn't succeed
+	/etc/init.d/postgresql stop
 	rm -rf /data/postgresql
+	dropdem
 	initdb
 	startdb
 	createuser
-	cleanimport
+	createdb
+	import
+	clear_cache
 	startservices
 }
-redofromscratch () {
+redo_fromscratch () {
 	mv /data/imported/* /data/
 	fromscratch
 }
-cleanimport (){
-	import_from_scratch=true
-	dropdb
-	dropdem
-	createdb
+import (){	
 	import_osm
 	import_dem
 }
 import_osm (){
+	startdb
 	imported_something=false
 	for f in /data/*.osm
 	do
@@ -103,14 +104,12 @@ import_osm (){
  	test !$imported_something && echo "No OSM data imported. Place *.osm or *.pbf files into data directory in order to import."
 }
 import_dem (){
-	_import_contours
-	_render_relief
-	mkdir - p /data/imported
-	mv *.hgt /data/imported
+	import_contours
+	import_relief
 }
-_import_contours (){
+import_contours (){
+	startdb
 	mkdir -p /data/tmp	
-	first=true
 	imported_something=false
 	for f in /data/*.hgt
 	do
@@ -118,21 +117,20 @@ _import_contours (){
 		name="$(dirname $f)/tmp/$(basename $f .hgt)"
 		# Create contour lines with 10m spacing
 		echo "Rendering contour lines from $f"
-		gdal_contour -i 1000 -snodata 32767 -a height $f $name.shp
+		gdal_contour -i 10 -snodata 32767 -a height $f $name.shp
 		# place the contour lines into the postgres database. create the table 
 		# in case this is the first round, otherwise append.
 		imported_something=true  
 		echo "Placing contour lines into Postgres DB"
-		if [ "$1" != "append" ] && [ $first = true ];
+		if $asweb psql -d gis -c '\dt' | grep -w contours;
 		then
-			echo "Creating contour Table"
-			shp2pgsql -c -I -g way $name contours | $asweb psql -q gis
-			first=false
-		else	
-			#echo "append $append"
+			echo "append"
 			# Even though we chose to append the data, shp2pgsql tries to create an index
-			# which is already there. Is this a bug?
+                        # which is already there. Is this a bug?
 			shp2pgsql -a -I -g way $name contours | sed '/^CREATE INDEX/ d' | $asweb psql -q gis
+		else	
+			echo "create table"
+			shp2pgsql -c -I -g way $name contours | $asweb psql -q gis
 		fi
 		# remove all temporary files, i.e. .prj, .shx, .shp and .dbf
 		rm $name.*
@@ -140,13 +138,22 @@ _import_contours (){
 	done
 	echo "done $imported_something"
  	test !$imported_something && echo "No DEM data imported. Place *.hgt files into data directory in order to import."
-
+	_dem_to_imported
+}
+reimport_contours (){
+	startdb
+	drop_contours
+	_dem_from_imported
+	import_contours
+	_dem_to_imported
+	clear_cache
 }
 _import_styles (){
 	awk 'NR==FNR{a[$1]=$2;next}{ for (i in a) gsub(i,a[i])}1' /data/zoom-to-scale.txt /data/layer-contours.xml.inc >/usr/local/src/mapnik-style/inc/layer-contours.xml.inc
 }        
-_render_relief (){
-	dropdem
+import_relief (){
+	drop_relief
+        _dem_from_imported
 	mkdir -p /data/tiff
 	mkdir -p /data/tmp
 	rm -rf /data/tmp/merged.tif
@@ -154,9 +161,21 @@ _render_relief (){
 	gdal_merge.py -v -o /data/tmp/merged.tif /data/*.hgt
         gdalwarp -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /data/tmp/merged.tif /data/tmp/warped.tif
 	gdaldem hillshade /data/tmp/warped.tif /data/tiff/hillshade.tif -z 2
-	gdaldem color-relief /data/tmp/warped.tif /usr/local/src/mapnik-style/colors.txt /data/tiff/relief.tif
+	gdaldem color-relief /data/tmp/warped.tif /usr/local/src/mapnik-style/relief-colors.txt /data/tiff/relief.tif
 	rm -rf /data/tmp/merged.tif
         rm -rf /data/tmp/warped.tif
+	_dem_to_imported
+}
+_dem_to_imported (){
+	mkdir -p /data/imported
+	mv /data/*.hgt /data/imported/
+}
+_dem_from_imported (){
+	mv /data/imported/*.hgt /data/
+}
+reimport_relief (){
+	import_relief
+	clear_cache	
 }
 clear_cache (){
 	sv stop renderd
@@ -166,7 +185,11 @@ clear_cache (){
 drop_contours (){
 	$asweb psql -d gis -c "DROP TABLE contours;"
 }
-dropdem (){
+drop_dem (){
+	drop_relief
+	drop_contours
+}
+drop_relief (){
 	rm -rf /data/tiff 
 }
 dropdb () {
