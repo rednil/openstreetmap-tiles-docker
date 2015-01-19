@@ -148,9 +148,11 @@ reimport_contours (){
 	_dem_to_imported
 	clear_cache
 }
-_import_styles (){
-	awk 'NR==FNR{a[$1]=$2;next}{ for (i in a) gsub(i,a[i])}1' /data/zoom-to-scale.txt /data/layer-contours.xml.inc >/usr/local/src/mapnik-style/inc/layer-contours.xml.inc
-}        
+carto2mapnik (){
+	/usr/local/src/mapnik-style/scripts/yaml2mml.py </usr/local/src/mapnik-style/project.yaml >/usr/local/src/mapnik-style/project.mml
+	carto /usr/local/src/mapnik-style/project.mml >/usr/local/src/mapnik-style/osm.xml
+	clear_cache
+}
 import_relief (){
 	drop_relief
         _dem_from_imported
@@ -158,12 +160,13 @@ import_relief (){
 	mkdir -p /data/tmp
 	rm -rf /data/tmp/merged.tif
 	rm -rf /data/tmp/warped.tif
-	gdal_merge.py -v -o /data/tmp/merged.tif /data/*.hgt
-        gdalwarp -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /data/tmp/merged.tif /data/tmp/warped.tif
-	gdaldem hillshade /data/tmp/warped.tif /data/tiff/hillshade.tif -z 2
-	gdaldem color-relief /data/tmp/warped.tif /usr/local/src/mapnik-style/relief-colors.txt /data/tiff/relief.tif
+	gdal_merge.py -co COMPRESS=lzw -v -o /data/tmp/merged.tif /data/*.hgt
+        gdalwarp -co COMPRESS=lzw -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /data/tmp/merged.tif /data/tmp/warped.tif
+	gdaldem hillshade -co COMPRESS=LZW -co PREDICTOR=2 /data/tmp/warped.tif /data/tiff/hillshade.tif
+	# gdaldem color-relief -co COMPRESS=JPEG /data/tiff/hillshade.tif -alpha /usr/local/src/mapnik-style/shade.ramp /data/tiff/hillshade-overlay.tif 
+	gdaldem color-relief -co COMPRESS=JPEG /data/tmp/warped.tif /usr/local/src/mapnik-style/relief-colors.txt /data/tiff/relief.tif
 	rm -rf /data/tmp/merged.tif
-        rm -rf /data/tmp/warped.tif
+    rm -rf /data/tmp/warped.tif
 	_dem_to_imported
 }
 _dem_to_imported (){

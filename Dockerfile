@@ -25,7 +25,7 @@ RUN apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-opt
 # Install remaining dependencies
 RUN apt-get install -y subversion git-core tar unzip wget bzip2 build-essential autoconf libtool libxml2-dev libgeos-dev libpq-dev libbz2-dev munin-node munin libprotobuf-c0-dev protobuf-c-compiler libfreetype6-dev libpng12-dev libtiff4-dev libicu-dev libgdal-dev libcairo-dev libcairomm-1.0-dev apache2 apache2-dev libagg-dev liblua5.2-dev ttf-unifont
 
-RUN apt-get install -y autoconf apache2-dev libtool libxml2-dev libbz2-dev libgeos-dev libgeos++-dev libproj-dev gdal-bin libgdal1-dev mapnik-utils python-mapnik libmapnik-dev python-gdal
+RUN apt-get install -y autoconf apache2-dev libtool libxml2-dev libbz2-dev libgeos-dev libgeos++-dev libproj-dev gdal-bin libgdal1-dev mapnik-utils python-mapnik libmapnik-dev python-gdal npm python-yaml
 
 # Install postgresql and postgis
 RUN apt-get install -y postgresql-9.3-postgis-2.1 postgresql-contrib postgresql-server-dev-9.3
@@ -60,22 +60,13 @@ RUN cd /tmp/mod_tile && \
     ldconfig
 
 # Install the Mapnik stylesheet
-RUN cd /usr/local/src && svn co http://svn.openstreetmap.org/applications/rendering/mapnik mapnik-style
+RUN ln -s /usr/bin/nodejs /usr/bin/node
+RUN npm install -g carto
+RUN cd /usr/local/src && git clone https://github.com/rednil/openstreetmap-carto.git mapnik-style
+RUN cd /usr/local/src && carto project.mml > osm.xml
 
 # Install the coastline data
-RUN cd /usr/local/src/mapnik-style && ./get-coastlines.sh /usr/local/share
-
-# Configure mapnik style-sheets
-RUN cd /usr/local/src/mapnik-style/inc && cp fontset-settings.xml.inc.template fontset-settings.xml.inc
-COPY mapnik-style/inc/datasource-settings.sed /tmp/
-RUN cd /usr/local/src/mapnik-style/inc && sed --file /tmp/datasource-settings.sed  datasource-settings.xml.inc.template > datasource-settings.xml.inc
-COPY mapnik-style/inc/settings.sed /tmp/
-RUN cd /usr/local/src/mapnik-style/inc && sed --file /tmp/settings.sed  settings.xml.inc.template > settings.xml.inc
-COPY mapnik-style/osm.xml.sed /tmp/
-RUN cd /usr/local/src/mapnik-style && sed --file /tmp/osm.xml.sed --in-place osm.xml
-COPY mapnik-style/inc/layer-* /usr/local/src/mapnik-style/inc/
-RUN cat mapnik-style/inc/layers.xml.inc >> /usr/local/src/mapnik-style/inc/layers.xml.inc
-COPY mapnik-style/relief-colors.txt /usr/local/src/mapnik-style
+RUN cd /usr/local/src/mapnik-style && ./get-shapefiles.sh
 
 # Configure renderd
 COPY renderd.conf.sed /tmp/
