@@ -63,7 +63,7 @@ RUN cd /tmp/mod_tile && \
 RUN ln -s /usr/bin/nodejs /usr/bin/node
 RUN npm install -g carto
 RUN cd /usr/local/src && git clone https://github.com/rednil/openstreetmap-carto.git mapnik-style
-RUN cd /usr/local/src && carto project.mml > osm.xml
+RUN cd /usr/local/src/mapnik-style && carto project.mml > osm.xml
 
 # Install the coastline data
 RUN cd /usr/local/src/mapnik-style && ./get-shapefiles.sh
