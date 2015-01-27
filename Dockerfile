@@ -18,6 +18,7 @@ RUN update-locale LANG=C.UTF-8
 
 # Ensure `add-apt-repository` is present
 RUN apt-get update -y
+RUN apt-get upgrade -y
 RUN apt-get install -y software-properties-common python-software-properties
 
 RUN apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libboost-python-dev libboost-regex-dev libboost-system-dev libboost-thread-dev

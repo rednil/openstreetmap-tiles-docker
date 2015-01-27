@@ -14,6 +14,8 @@ die () {
 }
 
 _startservice () {
+	mkdir -p /data/mod_tile
+	chown -R www-data.www-data /data/mod_tile
     sv start $1 || die "Could not start $1"
 }
 _stopservice (){
@@ -182,7 +184,7 @@ reimport_relief (){
 }
 clear_cache (){
 	sv stop renderd
-	rm -rf /var/lib/mod_tile/default
+	rm -rf /data/mod_tile/*
 	_startservice renderd
 }
 drop_contours (){
