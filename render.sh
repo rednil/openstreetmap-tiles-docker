@@ -46,5 +46,5 @@ do
 	xmax=$(long2xtile $right $zoom)
 	ymax=$(lat2ytile $bottom $zoom)
 	ymin=$(lat2ytile $top $zoom)
-	echo "render_list -a -n 4 -t /data/mod_tile -x $xmin -X $xmax -y $ymin -Y $ymax -z $zoom -Z $zoom"
+	render_list -a -n 4 -t /data/mod_tile -x $xmin -X $xmax -y $ymin -Y $ymax -z $zoom -Z $zoom
 done
