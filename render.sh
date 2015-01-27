@@ -1,10 +1,17 @@
 #!/bin/bash
 
-left=83.4;
-bottom=28;
-right=85;
-top=29;
-
+if [ "$1" = "nepal" ]
+then
+	left=80;
+	bottom=26;
+	right=88;
+	top=30;
+else
+	left=83.4;
+	bottom=28;
+	right=85;
+	top=29;
+fi
 
 # from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Bourne_shell_with_Awk
 long2xtile()  
