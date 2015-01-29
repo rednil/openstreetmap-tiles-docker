@@ -60,9 +60,11 @@ RUN cd /tmp/mod_tile && \
     make install-mod_tile && \
     ldconfig
 
-# Install the Mapnik stylesheet
+# Install node and some npm modules
 RUN ln -s /usr/bin/nodejs /usr/bin/node
-RUN npm install -g carto
+RUN npm install -g carto shelljs minimist
+
+# Install the Mapnik stylesheet
 RUN cd /usr/local/src && git clone https://github.com/rednil/openstreetmap-carto.git mapnik-style
 RUN cd /usr/local/src/mapnik-style && carto project.mml > osm.xml
 
