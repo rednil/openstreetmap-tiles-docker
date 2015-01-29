@@ -1,5 +1,8 @@
 #!/bin/bash
 
+minzoom=0
+maxzoom=16
+
 if [ "$1" = "nepal" ]
 then
 	left=80;
@@ -40,11 +43,21 @@ lat2ytile()
  echo "${ytile}";
 }
 
-for zoom in {0..18}
+zoom=$minzoom
+while [[ $zoom -le $maxzoom ]]
 do
-	xmin=$(long2xtile $left $zoom)
+	x=$(long2xtile $left $zoom)
 	xmax=$(long2xtile $right $zoom)
-	ymax=$(lat2ytile $bottom $zoom)
-	ymin=$(lat2ytile $top $zoom)
-	render_list -a -n 4 -t /data/mod_tile -x $xmin -X $xmax -y $ymin -Y $ymax -z $zoom -Z $zoom
+	while [[ $x -lt $xmax ]]
+	do
+		y=$(lat2ytile $top $zoom)
+		ymax=$(lat2ytile $bottom $zoom)
+		while [[ $y -lt $ymax ]]
+		do
+			wget -x -nH http://localhost:80/osm_tiles/$zoom/$x/$y.png
+			((y = y + 1))
+		done
+		((x = x + 1))
+	done
+    ((zoom = zoom + 1))
 done
