@@ -25,7 +25,7 @@ function forecast(){
 }
 
 var nmax = forecast();
-
+var nfail = 0;
 var threads = argv.threads || 4;
 
 console.log("Downloading", nmax, "tiles using "+threads+" threads");
@@ -50,14 +50,18 @@ function fraction(n, min, max){
 	return n+" ("+((n-min)+1)+"/"+((max-min)+1)+")";
 }
 
+var start = (new Date()).getTime();
+
 function getNext(code, output){
-	//console.log(code);
-	if((y+=1)>ymax){
-		if((x+=1)>xmax){
+	if((++y)>ymax){
+		if((++x)>xmax){
 			console.log();
-			if((z+=1)>zmax){
+			if((++z)>zmax){
 				if(!done){
-					console.log("Downloaded "+n+" tiles");
+					console.log("Downloaded "+n+" tiles.");
+					if(n<nmax){
+						console.log((nmax-n)+" tiles missing.");
+					}
 					done=true;
 				}
 				return;
@@ -68,12 +72,27 @@ function getNext(code, output){
 		y=ymin=getYmin(z);
 		ymax=getYmax(z);
 	}
-	n=n+1;
-	var url = "http://localhost:8080/osm_tiles/"+z+"/"+x+"/"+y+".png";
+	if(code){
+		//console.log();
+		//console.log(code, output, test);
+		nfail++;
+	}
+	else{
+		n=n+1;
+	}
+	var url = (argv.url||"http://localhost:8080/osm_tiles/")+z+"/"+x+"/"+y+".png";
 	var cmd = "wget -q -x -nH " + url;
 	if(!argv.quiet){
-		var progress = n+"/"+nmax+", z: "+fraction(z,zmin,zmax)+", x: "+fraction(x,xmin,xmax)+", y:"+fraction(y,ymin,ymax);
+		var current = (new Date()).getTime();
+		var sofar = current-start;
+		var total = (nmax/n)*sofar;
+		var eta = (new Date(start+total)).toTimeString().split(" ")[0];
+		var progress = n+"/"+nmax+"("+Math.round(n/nmax*100)+"%, ETA: "+eta+"), failed: "+nfail+"("+(n?Math.round(nfail/n*10000)/100:100)+"%), z: "+fraction(z,zmin,zmax)+", x: "+fraction(x,xmin,xmax)+", y:"+fraction(y,ymin,ymax);
 		process.stdout.write("\r"+progress);
+	}
+	if(argv.verbose){
+		console.log();
+		console.log(cmd);
 	}
 	if(argv.sim){
 		setTimeout(getNext,1);

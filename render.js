@@ -1,6 +1,6 @@
 #!/usr/local/bin/shjs
 
-//require('shelljs/global');
+require('shelljs/global');
 var argv = require('minimist')(process.argv.slice(2));
 
 
