@@ -1,5 +1,6 @@
 #!/usr/local/bin/shjs
 
+require('shelljs/global');
 var argv = require('minimist')(process.argv.slice(2));
 
 // from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#ECMAScript_.28JavaScript.2FActionScript.2C_etc..29
@@ -11,32 +12,76 @@ function lat2tile(lat,zoom) {
 }
 
 var zmin = argv.minzoom || 0;
-var zmax = argv.maxzoom || 18;
+var zmax = argv.maxzoom || 18; 
 
-for (var z = zmin; z <= zmax; z++){
-	var xmin = long2tile(argv.left, z);
-	var xmax = long2tile(argv.right, z);
-	var ymin = lat2tile(argv.top, z);
-	var ymax = lat2tile(argv.bottom, z);
-	var cmdArr = [];
-	if(argv.test){
-		console.log("zoom:", z, ", xmin:", xmin, ", xmax:", xmax, ", ymin:", ymin, ", ymax:", ymax);
+var z=zmin-1, x=0, y=0, xmax=-1, ymax=-1, xmin, ymin, n=0, done=false;
+
+function forecast(){
+	var n=0;
+	for (var z = zmin; z <= (argv.maxzoom || 18); z++){
+		n = n + (getXmax(z)-getXmin(z)+1) * (getYmax(z)-getYmin(z)+1);
 	}
-	else{
-		for(var x = xmin; x<=xmax; x++){
-			for(var y = ymin; y<=ymax; y++){
-				var url = "http://localhost:8080/osm_tiles/"+z+"/"+x+"/"+y+".png";
-				var cmd = "wget -x -nH " + url;
-				cmdArr.push(cmd);
-				if( (y==ymax && x==xmax && z==zmax) || (cmdArr.length>=(argv.threads || 4))){
-					(argv.sim ? console.log : exec)(cmdArr.join(" & "));
-					cmdArr=[];
-				}
-			}
-		}
-	}
+	return n;
 }
 
+var nmax = forecast();
+
+var threads = argv.threads || 4;
+
+console.log("Downloading", nmax, "tiles using "+threads+" threads");
+
+for(var i=0; i<threads; i++){
+	getNext();
+}
+
+function getXmin(z){
+	return long2tile(argv.left, z);
+}
+function getXmax(z){
+	return long2tile(argv.right, z);
+}
+function getYmin(z){
+	return lat2tile(argv.top, z);
+}
+function getYmax(z){
+	return lat2tile(argv.bottom, z);
+}
+function fraction(n, min, max){
+	return n+" ("+((n-min)+1)+"/"+((max-min)+1)+")";
+}
+
+function getNext(code, output){
+	//console.log(code);
+	if((y+=1)>ymax){
+		if((x+=1)>xmax){
+			console.log();
+			if((z+=1)>zmax){
+				if(!done){
+					console.log("Downloaded "+n+" tiles");
+					done=true;
+				}
+				return;
+			}
+			x=xmin=getXmin(z);
+			xmax=getXmax(z);
+		}
+		y=ymin=getYmin(z);
+		ymax=getYmax(z);
+	}
+	n=n+1;
+	var url = "http://localhost:8080/osm_tiles/"+z+"/"+x+"/"+y+".png";
+	var cmd = "wget -q -x -nH " + url;
+	if(!argv.quiet){
+		var progress = n+"/"+nmax+", z: "+fraction(z,zmin,zmax)+", x: "+fraction(x,xmin,xmax)+", y:"+fraction(y,ymin,ymax);
+		process.stdout.write("\r"+progress);
+	}
+	if(argv.sim){
+		setTimeout(getNext,1);
+	}
+	else{
+		exec(cmd, {async:true}, getNext);
+	}
+}
 
 			
 
