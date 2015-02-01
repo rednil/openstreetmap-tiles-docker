@@ -61,10 +61,10 @@ This folder is used to save
 Thus, all project-specific data is contained in one folder.
 
 The following command will emerge a tile server (including a leaflet test page)
-under http://localhost:8080
+under http://localhost:4242
 
-sudo docker run -v /my_dir_containing_data_files:/var/www rednil/mapnik fromscratch
+sudo docker run -p 4242:80 -v /my_dir_containing_data_files:/var/www rednil/mapnik fromscratch
         
 Afterwards, the container can be restarted with existing data using
 
-sudo docker run -v /my_dir_containing_data_files:/var/www rednil/mapnik startservices
+sudo docker run -p 4242:80 -v /my_dir_containing_data_files:/var/www rednil/mapnik startservices

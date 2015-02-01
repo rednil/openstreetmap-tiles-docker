@@ -2,7 +2,7 @@
 
 This repository contains instructions for building a
 [Docker](https://www.docker.io/) image containing the OpenStreetMap tile
-serving software stack, including [contours and a colored relief](http://wiki.openstreetmap.org/wiki/HikingBikingMaps) from elevation data. It is based on the
+serving software stack, including [contours and a colored relief](http://wiki.openstreetmap.org/wiki/HikingBikingMaps) from digital elevation mode (DEM) data. It is based on the
 [Switch2OSM instructions](http://switch2osm.org/serving-tiles/manually-building-a-tile-server-14-04/).
 
 As well as providing an easy way to set up and run the tile serving software it
@@ -12,7 +12,12 @@ also provides instructions for managing the back end database, allowing you to:
 * Import OSM data into the database
 * Drop the database
 
-Run `docker run XXX` for usage instructions.
+Run `docker run XXX` for usage instructions. In short:
+
+* prepare a folder containing the *.osm extract for the region you are interested in (for example, from [Geofabrik](http://download.geofabrik.de/)) and the respective *.hgt files for the elevation model (for example, from [Jonathan de Ferranti](http://viewfinderpanoramas.org/dem3.html).
+* sudo docker run -p 4242:80 -v /my_dir_containing_data_files:/var/www rednil/mapnik fromscratch
+* Browse to http://localhost:4242
+* Enjoy
 
 ## About
 
