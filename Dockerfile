@@ -66,10 +66,6 @@ RUN npm install -g carto shelljs minimist bower
 
 # Install the Mapnik stylesheet
 RUN cd /usr/local/src && git clone https://github.com/rednil/openstreetmap-carto.git mapnik-style
-RUN cd /usr/local/src/mapnik-style && carto project.mml > osm.xml
-
-# Install the coastline data
-RUN cd /usr/local/src/mapnik-style && ./get-shapefiles.sh
 
 # Configure renderd
 COPY renderd.conf.sed /tmp/
@@ -129,6 +125,9 @@ COPY help.txt /usr/local/share/doc/run/help.txt
 # Add the entrypoint
 COPY run.sh /usr/local/sbin/run
 ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run"]
+
+# Add the webroot, will be copied to /var/www at runtime
+COPY webroot /usr/local/src
 
 # Default to showing the usage text
 CMD ["help"]

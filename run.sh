@@ -15,7 +15,11 @@ die () {
 
 _startservice () {
 	mkdir -p /var/www/mod_tile
-	chown -R www-data.www-data /var/www/mod_tile
+	if [ ! -d "/var/www/webroot" ]; then
+		echo "Copying webroot from /usr/local/src to /var/www"
+		cp /usr/local/src/webroot /var/www
+	fi
+	chown -R www-data.www-data /var/www/mod_tile /var/www/webroot
     sv start $1 || die "Could not start $1"
 }
 _stopservice (){
@@ -77,9 +81,27 @@ redo_fromscratch () {
 	mv /var/www/imported/* /var/www/
 	fromscratch
 }
-import (){	
+import_style (){
+	styledir=/var/www/mapnik-style
+	if [ ! -d "$styledir" ]; then
+		echo "Copying /usr/local/src/mapnik/style to $styledir"
+		cp -r /usr/local/src/mapnik-style $styledir
+		chown -R www-data.www-data $styledir
+	fi
+	if [ ! -d "/var/www/mapnik-style" ]; then
+		echo "Executing $styledir/.get-shapefiles.sh"
+		$asweb cd $styledir && ./get-shapefiles.sh
+		cd /var/www
+	fi
+	echo "Translating project.yaml to osm.xml in $styledir"
+	$styledir/scripts/yaml2mml.py <$styledir/project.yaml >$styledir/project.mml
+	carto $styledir/project.mml >$styledir/osm.xml
+}
+
+import (){
 	import_osm
 	import_dem
+	import_style
 }
 import_osm (){
 	startdb

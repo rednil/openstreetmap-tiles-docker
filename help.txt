@@ -1,39 +1,70 @@
 Usage: run [COMMAND ...]
 
-Run OpenStreetMap Tile Server related operations in a docker container.
+Run OpenStreetMap Tile Server related operations 
+(featuring a colored relief, hillshade and contour lines) 
+in a docker container.
 
 Positional arguments:
   COMMAND          The command to run. (default: help)
 
-Commands:
-  help             Show this help message
-  initdb           Initialise the postgres database
-  startdb          Start the postgresql database
-  createuser       Create the osm user in the database
-  createdb         Create the osm database
-  import           Import osm data into the database
-  startservices    Start the osm web services
-  cli              Drop into a bash shell
-  dropdb           Drop the osm database
+High Level Commands:
+  fromScratch Starting from a directory mapped to /var/www that contains 
+              * openstreetmap (*.osm) data and
+              * digital elevation model (*.hgt) data, 
+              this command does everything required in order to serve tiles from this data.
+              I.e., it executes the following low level commands in the given order:
+              (1) drop_dem, 
+              (2) init_db, 
+              (3) start_db, 
+              (4) create_user, 
+              (5) create_db, 
+              (6) import, 
+              (7) clear_cache, 
+              (8) start_services
+  import      Imports all *.osm into the database and 
+              calculates contours, relief and hillshade from *.hgt files.
+              The contour lines are saved in the postgres database.
+              The relief and hillshade raster images are saved in /var/www/mapnik-style
+              The imported files are copied into a folder named "imported".
 
-Set up a database saved on an external volume:
-  The following command will initialise the postgresql database on an external
-  volume that can be used to persist the data:
+				   
+Low Level Commands:
+  help              Show this help message
+  init_db           Initialise the postgres database
+  start_db          Start the postgresql database
+  create_user       Create the osm user in the database
+  create_db         Create the osm database
+  import_osm        Import *.osm files from /var/www into the database
+  import_dem        import_contours, import_relief
+  import_contours   Calculates contour lines from *hgt files in /var/www, saves them in the database
+  import_relief     Calculates relief and hillshade from *hgt files in /var/www, 
+                    saves them in /var/www/mapnik-style
+  import_style		Ensure that shapefiles are present and translate project.yaml to osm.xml
+  reimport_contours drop_contours, import_contours from /var/www/imported
+  reimport_relief   drop_relief, import_relief from /var/www/imported
+  start_services    Start the osm web services (renderd and apache2)
+  stop_services     Stop the osm web services (renderd and apache2)
+  restart_services  stop_services, start_services
+  cli               Drop into a bash shell
+  drop_db           Drop the osm database (currently including contour lines)
+  drop_relief       Drops the relief (including hillshade)
+  drop_contours     Drops the contours table from the postgres db
+  drop_dem          drop_relief, drop_contours
+  clear_cache       Clears the mod_tile cache and restarts the rendering daemon
+  
 
-  docker run -v /data/osm-postgresql:/var/lib/postgresql homme/openstreetmap-tiles \
-         initdb startdb createuser createdb migrate
+Recommended approach is to map a directory containing the files to import to /var/www. 
+This folder is used to save
+  * the postgres db
+  * the tile cache
+  * the mapnik styles
+Thus, all project-specific data is contained in one folder.
 
-Import data:
-  The following will import the .osm file at `/tmp/import.osm` into the
-  database.
+The following command will emerge a tile server (including a leaflet test page)
+under http://localhost:8080
 
-  docker run -v /data/osm-postgresql:/var/lib/postgresql -v /tmp:/data homme/openstreetmap-tiles \
-         startdb import
+sudo docker run -v /my_dir_containing_data_files:/var/www rednil/mapnik fromscratch
+        
+Afterwards, the container can be restarted with existing data using
 
-Start the webserver:
-  Once data is loaded and users have been created run the webserver:
-
-  docker run -P -v /data/osm-postgresql:/var/lib/postgresql homme/openstreetmap-tiles \
-         startdb startservices
-
-For further information run the cli and look at /usr/local/share/doc/README.md.
+sudo docker run -v /my_dir_containing_data_files:/var/www rednil/mapnik startservices
