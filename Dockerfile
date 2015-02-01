@@ -62,7 +62,7 @@ RUN cd /tmp/mod_tile && \
 
 # Install node and some npm modules
 RUN ln -s /usr/bin/nodejs /usr/bin/node
-RUN npm install -g carto shelljs minimist
+RUN npm install -g carto shelljs minimist bower
 
 # Install the Mapnik stylesheet
 RUN cd /usr/local/src && git clone https://github.com/rednil/openstreetmap-carto.git mapnik-style
@@ -77,7 +77,7 @@ RUN cd /usr/local/etc && sed --file /tmp/renderd.conf.sed --in-place renderd.con
 
 # Create the files required for the mod_tile system to run
 RUN mkdir /var/run/renderd && chown www-data: /var/run/renderd
-RUN mkdir /var/lib/mod_tile && chown www-data /var/lib/mod_tile
+RUN mkdir /var/www/mod_tile && chown www-data /var/www/mod_tile
 
 # Configure mod_tile
 COPY mod_tile.load /etc/apache2/mods-available/
@@ -114,7 +114,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 EXPOSE 80 5432
 
 # We need the volume for importing data from
-VOLUME ["/data"]
+VOLUME ["/var/www"]
 
 # Set the osm2pgsql import cache size in MB. Used in `run import`.
 ENV OSM_IMPORT_CACHE 800

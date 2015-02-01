@@ -14,39 +14,36 @@ die () {
 }
 
 _startservice () {
-	mkdir -p /data/mod_tile
-	chown -R www-data.www-data /data/mod_tile
+	mkdir -p /var/www/mod_tile
+	chown -R www-data.www-data /var/www/mod_tile
     sv start $1 || die "Could not start $1"
 }
 _stopservice (){
 	sv stop $1 || die "Could not stop $1"
 }
-startdb () {
+start_db () {
     _startservice postgresql
 }
-testcontours (){
-	_import_contours "append" 
-}
-initdb () {
+init_db () {
     echo "Initialising postgresql"
-    if [ -d /data/postgresql/9.3/main ] && [ $( ls -A /data/postgresql/9.3/main | wc -c ) -ge 0 ]
+    if [ -d /var/www/postgresql/9.3/main ] && [ $( ls -A /var/www/postgresql/9.3/main | wc -c ) -ge 0 ]
     then
-        die "Initialisation failed: the directory is not empty: /data/postgresql/9.3/main"
+        die "Initialisation failed: the directory is not empty: /var/www/postgresql/9.3/main"
     fi
 
-    mkdir -p /data/postgresql/9.3/main && chown -R postgres /data/postgresql/
-    sudo -u postgres -i /usr/lib/postgresql/9.3/bin/initdb --pgdata /data/postgresql/9.3/main
-    ln -s /etc/ssl/certs/ssl-cert-snakeoil.pem /data/postgresql/9.3/main/server.crt
-    ln -s /etc/ssl/private/ssl-cert-snakeoil.key /data/postgresql/9.3/main/server.key
+    mkdir -p /var/www/postgresql/9.3/main && chown -R postgres /var/www/postgresql/
+    sudo -u postgres -i /usr/lib/postgresql/9.3/bin/initdb --pgdata /var/www/postgresql/9.3/main
+    ln -s /etc/ssl/certs/ssl-cert-snakeoil.pem /var/www/postgresql/9.3/main/server.crt
+    ln -s /etc/ssl/private/ssl-cert-snakeoil.key /var/www/postgresql/9.3/main/server.key
 }
 
-createuser () {
+create_user () {
     USER=www-data
     echo "Creating user $USER"
     setuser postgres createuser -s $USER
 }
 
-createdb () {
+create_db () {
     dbname=gis
     echo "Creating database $dbname"
     cd /var/www
@@ -66,18 +63,18 @@ createdb () {
 fromscratch (){
 	#_stopservice postgresql would do a smart shutdown, which most times doesn't succeed
 	/etc/init.d/postgresql stop
-	rm -rf /data/postgresql
-	dropdem
-	initdb
-	startdb
-	createuser
-	createdb
+	rm -rf /var/www/postgresql
+	drop_dem
+	init_db
+	start_db
+	create_user
+	create_db
 	import
 	clear_cache
-	startservices
+	start_services
 }
 redo_fromscratch () {
-	mv /data/imported/* /data/
+	mv /var/www/imported/* /var/www/
 	fromscratch
 }
 import (){	
@@ -87,10 +84,10 @@ import (){
 import_osm (){
 	startdb
 	imported_something=false
-	for f in /data/*.osm
+	for f in /var/www/*.osm
 	do
 	    if [ -f "$f" ]; then
-		mkdir -p /data/imported
+		mkdir -p /var/www/imported
 		echo "Importing ${import} into gis"
     		echo "$OSM_IMPORT_CACHE" | grep -P '^[0-9]+$' || \
         		die "Unexpected cache type: expected an integer but found: ${OSM_IMPORT_CACHE}"
@@ -99,7 +96,7 @@ import_osm (){
         		number_processes=8;
     		fi
     		$asweb osm2pgsql --slim --cache $OSM_IMPORT_CACHE --database gis --number-processes $number_processes $f
-		mv $f /data/imported
+		mv $f /var/www/imported
 		imported_something=true
 	    fi
 	done
@@ -111,9 +108,9 @@ import_dem (){
 }
 import_contours (){
 	startdb
-	mkdir -p /data/tmp	
+	mkdir -p /var/www/tmp	
 	imported_something=false
-	for f in /data/*.hgt
+	for f in /var/www/*.hgt
 	do
 	    if [ -f "$f"  ]; then
 		name="$(dirname $f)/tmp/$(basename $f .hgt)"
@@ -151,32 +148,33 @@ reimport_contours (){
 	clear_cache
 }
 carto2mapnik (){
-	/usr/local/src/mapnik-style/scripts/yaml2mml.py </usr/local/src/mapnik-style/project.yaml >/usr/local/src/mapnik-style/project.mml
-	carto /usr/local/src/mapnik-style/project.mml >/usr/local/src/mapnik-style/osm.xml
+	styledir=/var/www/mapnik-style
+	$styledir/scripts/yaml2mml.py <$styledir/project.yaml >$styledir/project.mml
+	carto $styledir/project.mml >$styledir/osm.xml
 	clear_cache
 }
 import_relief (){
 	drop_relief
         _dem_from_imported
-	mkdir -p /data/tiff
-	mkdir -p /data/tmp
-	rm -rf /data/tmp/merged.tif
-	rm -rf /data/tmp/warped.tif
-	gdal_merge.py -co COMPRESS=lzw -v -o /data/tmp/merged.tif /data/*.hgt
-        gdalwarp -co COMPRESS=lzw -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /data/tmp/merged.tif /data/tmp/warped.tif
-	gdaldem hillshade -co COMPRESS=LZW -co PREDICTOR=2 /data/tmp/warped.tif /data/tiff/hillshade.tif
-	# gdaldem color-relief -co COMPRESS=JPEG /data/tiff/hillshade.tif -alpha /usr/local/src/mapnik-style/shade.ramp /data/tiff/hillshade-overlay.tif 
-	gdaldem color-relief -co COMPRESS=JPEG /data/tmp/warped.tif /usr/local/src/mapnik-style/relief-colors.txt /data/tiff/relief.tif
-	rm -rf /data/tmp/merged.tif
-    rm -rf /data/tmp/warped.tif
+	mkdir -p /var/www/tiff
+	mkdir -p /var/www/tmp
+	rm -rf /var/www/tmp/merged.tif
+	rm -rf /var/www/tmp/warped.tif
+	gdal_merge.py -co COMPRESS=lzw -v -o /var/www/tmp/merged.tif /var/www/*.hgt
+        gdalwarp -co COMPRESS=lzw -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /var/www/tmp/merged.tif /var/www/tmp/warped.tif
+	gdaldem hillshade -co COMPRESS=LZW -co PREDICTOR=2 /var/www/tmp/warped.tif /var/www/mapnik-style/hillshade.tif
+	# gdaldem color-relief -co COMPRESS=JPEG /var/www/tiff/hillshade.tif -alpha /usr/local/src/mapnik-style/shade.ramp /var/www/tiff/hillshade-overlay.tif 
+	gdaldem color-relief -co COMPRESS=JPEG /var/www/tmp/warped.tif /usr/local/src/mapnik-style/relief-colors.txt /var/www/mapnik-style/relief.tif
+	rm -rf /var/www/tmp/merged.tif
+    rm -rf /var/www/tmp/warped.tif
 	_dem_to_imported
 }
 _dem_to_imported (){
-	mkdir -p /data/imported
-	mv /data/*.hgt /data/imported/
+	mkdir -p /var/www/imported
+	mv /var/www/*.hgt /var/www/imported/
 }
 _dem_from_imported (){
-	mv /data/imported/*.hgt /data/
+	mv /var/www/imported/*.hgt /var/www/
 }
 reimport_relief (){
 	import_relief
@@ -184,7 +182,7 @@ reimport_relief (){
 }
 clear_cache (){
 	sv stop renderd
-	rm -rf /data/mod_tile/*
+	rm -rf /var/www/mod_tile/*
 	_startservice renderd
 }
 drop_contours (){
@@ -195,12 +193,12 @@ drop_dem (){
 	drop_contours
 }
 drop_relief (){
-	rm -rf /data/tiff 
+	rm -rf /var/www/mapnik-style/relief.tif /var/www/mapnik-style/hillshade.tif 
 }
-dropdb () {
+drop_db () {
     echo "Dropping database"
     cd /var/www
-    setuser postgres dropdb gis
+    setuser postgres drop_db gis
 }
 
 cli () {
@@ -209,9 +207,17 @@ cli () {
     exec bash
 }
 
-startservices () {
+start_services () {
     _startservice renderd
     _startservice apache2
+}
+stop_services (){
+	_stopservice renderd
+	_stopservice apache2
+}
+restart_services(){
+	stop_services
+	start_services
 }
 
 help () {
