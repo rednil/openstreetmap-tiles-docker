@@ -127,7 +127,7 @@ import_osm (){
 		imported_something=true
 	    fi
 	done
- 	test !$imported_something && echo "No OSM data imported. Place *.osm or *.pbf files into data directory in order to import."
+ 	test $imported_something || echo "No OSM data imported. Place *.osm or *.pbf files into data directory in order to import."
 }
 import_dem (){
 	import_contours
@@ -163,7 +163,7 @@ import_contours (){
 	    fi
 	done
 	echo "done $imported_something"
- 	test !$imported_something && echo "No DEM data imported. Place *.hgt files into data directory in order to import."
+ 	test $imported_something || echo "No DEM data imported. Place *.hgt files into data directory in order to import."
 	_dem_to_imported
 }
 reimport_contours (){
