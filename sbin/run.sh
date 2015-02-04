@@ -182,16 +182,38 @@ carto2mapnik (){
 }
 import_relief (){
 	drop_relief
-        _dem_from_imported
+	_dem_from_imported
 	mkdir -p /var/www/tiff
 	mkdir -p /var/www/tmp
 	rm -rf /var/www/tmp/merged.tif
 	rm -rf /var/www/tmp/warped.tif
-	gdal_merge.py -co COMPRESS=lzw -v -o /var/www/tmp/merged.tif /var/www/*.hgt
-        gdalwarp -co COMPRESS=lzw -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /var/www/tmp/merged.tif /var/www/tmp/warped.tif
-	gdaldem hillshade -co COMPRESS=LZW -co PREDICTOR=2 /var/www/tmp/warped.tif /var/www/mapnik-style/hillshade.tif
-	# gdaldem color-relief -co COMPRESS=JPEG /var/www/tiff/hillshade.tif -alpha /usr/local/src/mapnik-style/shade.ramp /var/www/tiff/hillshade-overlay.tif 
-	gdaldem color-relief -co COMPRESS=JPEG /var/www/tmp/warped.tif /var/www/mapnik-style/relief-colors.txt /var/www/mapnik-style/relief.tif
+	gdal_merge.py \
+		-co COMPRESS=lzw \
+		-v -o \
+		/var/www/tmp/merged.tif \
+		/var/www/*.hgt
+	gdalwarp \
+		-co COMPRESS=lzw \
+		-of GTiff \ 
+		-co "TILED=YES" \
+		-srcnodata 32767 \
+		-t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" \
+		-rcs \
+		-order 3 \
+		-tr 30 30 \
+		-multi \
+		/var/www/tmp/merged.tif \
+		/var/www/tmp/warped.tif
+	gdaldem hillshade \
+		-co COMPRESS=LZW \
+		-co PREDICTOR=2 \
+		/var/www/tmp/warped.tif \
+		/var/www/mapnik-style/hillshade.tif
+	gdaldem color-relief \
+		-co COMPRESS=JPEG \
+		/var/www/tmp/warped.tif \
+		/var/www/mapnik-style/relief-colors.txt \
+		/var/www/mapnik-style/relief.tif
 	rm -rf /var/www/tmp/merged.tif
     rm -rf /var/www/tmp/warped.tif
 	_dem_to_imported
