@@ -88,9 +88,11 @@ import_style (){
 		cp -r /usr/local/src/mapnik-style $styledir
 		chown -R www-data.www-data $styledir
 	fi
-	if [ ! -d "/var/www/mapnik-style" ]; then
-		echo "Executing $styledir/.get-shapefiles.sh"
-		$asweb cd $styledir && ./get-shapefiles.sh
+	if [ ! -d "$styledir/data" ]; then
+		cd $styledir
+		echo "Executing $styledir/get-shapefiles.sh"
+		$asweb ./get-shapefiles.sh
+		rm data/*.zip data/*.tgz
 		cd /var/www
 	fi
 	echo "Translating project.yaml to osm.xml in $styledir"
