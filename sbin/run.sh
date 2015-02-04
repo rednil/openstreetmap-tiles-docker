@@ -15,11 +15,11 @@ die () {
 
 _startservice () {
 	mkdir -p /var/www/mod_tile
-	if [ ! -d "/var/www/webroot" ]; then
-		echo "Copying webroot from /usr/local/src to /var/www"
-		cp -r /usr/local/src/webroot /var/www
+	if [ ! -d "/var/www/html" ]; then
+		echo "Copying html from /usr/local/src to /var/www"
+		cp -r /usr/local/src/html /var/www
 	fi
-	chown -R www-data.www-data /var/www/mod_tile /var/www/webroot
+	chown -R www-data.www-data /var/www/mod_tile /var/www/html
     sv start $1 || die "Could not start $1"
 }
 _stopservice (){
@@ -191,7 +191,7 @@ import_relief (){
         gdalwarp -co COMPRESS=lzw -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /var/www/tmp/merged.tif /var/www/tmp/warped.tif
 	gdaldem hillshade -co COMPRESS=LZW -co PREDICTOR=2 /var/www/tmp/warped.tif /var/www/mapnik-style/hillshade.tif
 	# gdaldem color-relief -co COMPRESS=JPEG /var/www/tiff/hillshade.tif -alpha /usr/local/src/mapnik-style/shade.ramp /var/www/tiff/hillshade-overlay.tif 
-	gdaldem color-relief -co COMPRESS=JPEG /var/www/tmp/warped.tif /usr/local/src/mapnik-style/relief-colors.txt /var/www/mapnik-style/relief.tif
+	gdaldem color-relief -co COMPRESS=JPEG /var/www/tmp/warped.tif /var/www/mapnik-style/relief-colors.txt /var/www/mapnik-style/relief.tif
 	rm -rf /var/www/tmp/merged.tif
     rm -rf /var/www/tmp/warped.tif
 	_dem_to_imported

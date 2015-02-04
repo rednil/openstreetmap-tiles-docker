@@ -67,4 +67,4 @@ sudo docker run -p 4242:80 -v /my_dir_containing_data_files:/var/www rednil/mapn
         
 Afterwards, the container can be restarted with existing data using
 
-sudo docker run -p 4242:80 -v /my_dir_containing_data_files:/var/www rednil/mapnik startservices
+sudo docker run -p -d 4242:80 -v /my_dir_containing_data_files:/var/www rednil/mapnik startservices
