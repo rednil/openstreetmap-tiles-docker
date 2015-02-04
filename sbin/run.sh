@@ -104,7 +104,7 @@ import (){
 	import_style
 }
 import_osm (){
-	startdb
+	start_db
 	imported_something=false
 	for f in /var/www/*.osm
 	do
@@ -129,7 +129,7 @@ import_dem (){
 	import_relief
 }
 import_contours (){
-	startdb
+	start_db
 	mkdir -p /var/www/tmp	
 	imported_something=false
 	for f in /var/www/*.hgt
@@ -162,7 +162,7 @@ import_contours (){
 	_dem_to_imported
 }
 reimport_contours (){
-	startdb
+	start_db
 	drop_contours
 	_dem_from_imported
 	import_contours
