@@ -17,7 +17,7 @@ _startservice () {
 	mkdir -p /var/www/mod_tile
 	if [ ! -d "/var/www/webroot" ]; then
 		echo "Copying webroot from /usr/local/src to /var/www"
-		cp /usr/local/src/webroot /var/www
+		cp -r /usr/local/src/webroot /var/www
 	fi
 	chown -R www-data.www-data /var/www/mod_tile /var/www/webroot
     sv start $1 || die "Could not start $1"

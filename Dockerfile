@@ -129,7 +129,7 @@ RUN ln -s /usr/local/sbin/run.sh /usr/local/sbin/run
 ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run"]
 
 # Add the webroot, will be copied to /var/www at runtime
-COPY webroot /usr/local/src
+COPY webroot /usr/local/src/webroot
 
 # Default to showing the usage text
 CMD ["help"]
