@@ -187,33 +187,10 @@ import_relief (){
 	mkdir -p /var/www/tmp
 	rm -rf /var/www/tmp/merged.tif
 	rm -rf /var/www/tmp/warped.tif
-	gdal_merge.py \
-		-co COMPRESS=lzw \
-		-v -o \
-		/var/www/tmp/merged.tif \
-		/var/www/*.hgt
-	gdalwarp \
-		-co COMPRESS=lzw \
-		-of GTiff \ 
-		-co "TILED=YES" \
-		-srcnodata 32767 \
-		-t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" \
-		-rcs \
-		-order 3 \
-		-tr 30 30 \
-		-multi \
-		/var/www/tmp/merged.tif \
-		/var/www/tmp/warped.tif
-	gdaldem hillshade \
-		-co COMPRESS=LZW \
-		-co PREDICTOR=2 \
-		/var/www/tmp/warped.tif \
-		/var/www/mapnik-style/hillshade.tif
-	gdaldem color-relief \
-		-co COMPRESS=JPEG \
-		/var/www/tmp/warped.tif \
-		/var/www/mapnik-style/relief-colors.txt \
-		/var/www/mapnik-style/relief.tif
+	gdal_merge.py -co COMPRESS=lzw -v -o /var/www/tmp/merged.tif /var/www/*.hgt
+	gdalwarp -co COMPRESS=lzw -of GTiff -co "TILED=YES" -srcnodata 32767 -t_srs "+proj=merc +ellps=sphere +R=6378137 +a=6378137 +units=m" -rcs -order 3 -tr 30 30 -multi /var/www/tmp/merged.tif /var/www/tmp/warped.tif
+	gdaldem hillshade -co COMPRESS=LZW -co PREDICTOR=2 /var/www/tmp/warped.tif /var/www/mapnik-style/hillshade.tif
+	gdaldem color-relief -co COMPRESS=JPEG /var/www/tmp/warped.tif /var/www/mapnik-style/relief-colors.txt /var/www/mapnik-style/relief.tif
 	rm -rf /var/www/tmp/merged.tif
     rm -rf /var/www/tmp/warped.tif
 	_dem_to_imported
