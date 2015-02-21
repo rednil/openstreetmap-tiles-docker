@@ -62,7 +62,7 @@ RUN cd /tmp/mod_tile && \
 
 # Install node and some npm modules
 RUN ln -s /usr/bin/nodejs /usr/bin/node
-RUN npm install -g carto shelljs minimist bower
+RUN npm install -g carto shelljs minimist bower point-in-polygon request unzip
 
 # Install the Mapnik stylesheet
 RUN cd /usr/local/src && git clone https://github.com/rednil/openstreetmap-carto.git mapnik-style
@@ -129,7 +129,7 @@ RUN ln -s /usr/local/sbin/run.sh /usr/local/sbin/run
 ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run"]
 
 # Add the webroot, will be copied to /var/www at runtime
-COPY html /usr/local/src/html
+COPY html /usr/local/src/
 
 # Default to showing the usage text
 CMD ["help"]
