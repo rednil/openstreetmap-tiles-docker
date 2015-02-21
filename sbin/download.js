@@ -114,10 +114,12 @@ function getBB(poly){
 
 function getFileList(poly){
 	var bb = getBB(poly);
+	console.log('Bounding Box:');
+	console.dir(bb);
 	var deFerranti = {};
 	var hgtList = {};
-	for(var x=Math.floor(bb.xmin); x<Math.floor(bb.xmax); x++){
-		for(var y=Math.floor(bb.ymin); y<Math.floor(bb.ymax); y++){
+	for(var x=Math.floor(bb.xmin); x<=Math.floor(bb.xmax); x++){
+		for(var y=Math.floor(bb.ymin); y<=Math.floor(bb.ymax); y++){
 			// check if one of the four corners of a given 
 			// tile is inside the polygon
 			var required = (
@@ -126,6 +128,7 @@ function getFileList(poly){
 				inside([x+1,y], poly) ||
 				inside([x+1,y+1], poly) 
 			);
+			console.log('checked', x, y, required);
 			if(required){
 				var zipName = getDeFerrantiName([x,y]);
 				var fileName = coorToName([x,y]);

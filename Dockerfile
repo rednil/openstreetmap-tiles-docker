@@ -126,10 +126,10 @@ COPY help.txt /usr/local/share/doc/run/help.txt
 COPY sbin/* /usr/local/sbin/
 RUN ln -s /usr/local/sbin/run.sh /usr/local/sbin/run
 
-ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run"]
+ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run.sh"]
 
 # Add the webroot, will be copied to /var/www at runtime
 COPY html /usr/local/src/
 
-# Default to showing the usage text
-CMD ["help"]
+# Default to assembling a running server
+CMD ["startup"]
