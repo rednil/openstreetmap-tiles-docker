@@ -1,27 +1,35 @@
-# OpenStreetMap Tile Server Container
+# Mapnik Tile Server Container for Topographic Maps
 
 This repository contains instructions for building a
 [Docker](https://www.docker.io/) image containing the OpenStreetMap tile
-serving software stack, including [contours and a colored relief](http://wiki.openstreetmap.org/wiki/HikingBikingMaps) from digital elevation mode (DEM) data. It is based on the
+serving software stack, including [contours and a colored relief](http://wiki.openstreetmap.org/wiki/HikingBikingMaps) from digital elevation mode (DEM) data. It started as a fork of [geo-data/openstreetmap-tiles-docker](https://github.com/geo-data/openstreetmap-tiles-docker) which in turn is based on the
 [Switch2OSM instructions](http://switch2osm.org/serving-tiles/manually-building-a-tile-server-14-04/).
 
-As well as providing an easy way to set up and run the tile serving software it
-also provides instructions for managing the back end database, allowing you to:
+Given solely the name of the desired region at runtime, the software contained in the docker container assembles a running tileserver for that region from scratch.
 
-* Create the database
-* Import OSM data into the database
-* Drop the database
+In particular, the following steps are taken:
 
-Run `docker run XXX` for usage instructions. In short:
+* Download Openstreetmap data for the given region from [Geofabrik](http://www.geofabrik.de/)
+* Download DEM data for the given region from [Jonathan de Ferranti](http://viewfinderpanoramas.org/dem3.html)
+* Initialize and setup a postgres database and import the Openstreetmap data
+* render contour lines from the DEM data
+* render a colored relief layer from the DEM data
+* render a hillshade layer from the DEM data
+* configure mapnik and renderd to serve images made up from all of the above layers (relief, hillshade, contour lines, openstreetmap data)
 
-* prepare a folder containing the *.osm extract for the region you are interested in (for example, from [Geofabrik](http://download.geofabrik.de/)) and the respective *.hgt files for the elevation model (for example, from [Jonathan de Ferranti](http://viewfinderpanoramas.org/dem3.html).
-* sudo docker run -p 4242:80 -v /my_dir_containing_data_files:/var/www rednil/mapnik fromscratch
-* Browse to http://localhost:4242
-* Enjoy
+# Quick Start
 
-## About
+You have to provide 
 
-This is a work in progress, for a stable version see its [origin](https://github.com/geo-data/openstreetmap-tiles-docker) (without contours and color relief).
+* (-v) the absolute path to an empty working directory 
+* (-e) the name of the region you want to serve, in the notation used in the download section at [Geofabrik](http://www.geofabrik.de/), e.g. "europe/isle-of-man". Be careful, big countries or even continents need LOTS of space and time to build. This image is only tested for single, small countries.
+
+Instead of providing the name of the desired region, you can place *.pbf files for the Openstreetmap data and *.hgt files for the DEM data in the working directory manually. They should be picked up during startup.
+
+# Example
+sudo docker run -p 4242:80 -e 'region=europe/isle-of-man' -v /home/xxx/emptydir:/var/www rednil/mapnik 
+
+# About
 
 The container runs Ubuntu 14.04 (Trusty) and is based on the
 [phusion/baseimage-docker](https://github.com/phusion/baseimage-docker).  It

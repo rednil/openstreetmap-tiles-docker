@@ -1,7 +1,8 @@
 #!/bin/sh
 
 startup (){
-	if [ ! -d /var/www/region/$region ]; then
+	chown -R www-data.www-data /var/www/
+	if [ ! -d "/var/www/region/$region" ]; then
 		deleteDb.sh
 		rm -rf \
 			/var/www/milestones \
@@ -10,19 +11,20 @@ startup (){
 			/var/www/*.hgt \
 			/var/www/mapnik-style/hillshade*.tif \
 			/var/www/mapnik-style/relief*.tif \
-			/var/www/mapnik-style/contours
+			/var/www/mapnik-style/contours \
+			/var/www/mod_tile
+
 
 		setuser www-data mkdir -p /var/www/region/$region
 	fi
 
-	download.js
+	setuser www-data download.js
 	dbSetup.sh
+	importStyle.sh
 	createContours.sh
 	createRelief.sh
 	createHillshade.sh
-	importStyle.sh
-	sv start renderd
-	sv start apache2
+	startServices.sh
 }
 
 cli () {

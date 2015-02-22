@@ -39,7 +39,18 @@ function ensureGeofabrik(file, cb){
 		});
 	}
 }
-
+function poly2geojson(poly){
+	return {
+		"type": "Feature",
+		"properties": {
+			"name": "bahundanda-chamje"
+		},
+		"geometry": {
+			"type": "LineString",
+			"coordinates": poly
+		}
+	};
+}
 function pbf(file){
 	ln('-s', osm+file, '/var/www/osm.pbf');
 }
@@ -56,6 +67,15 @@ function poly(file){
 				var match = line.match(/^\s+([0-9.E+-]+)\s+([0-9.E+-]+)\s*$/);
 				if(match){
 					poly.push([Number(match[1]), Number(match[2])]);
+				}
+			});
+			var jsonp = 'osmpoly='+JSON.stringify(poly2geojson(poly));
+			fs.writeFile('/var/www/region.js', jsonp, function(err){
+				if(err){
+					console.log(err);
+				}
+				else{
+					console.log('Saved polygon as a jsonp file');
 				}
 			});
 			files = getFileList(poly);
@@ -128,7 +148,7 @@ function getFileList(poly){
 				inside([x+1,y], poly) ||
 				inside([x+1,y+1], poly) 
 			);
-			console.log('checked', x, y, required);
+			//console.log('checked', x, y, required);
 			if(required){
 				var zipName = getDeFerrantiName([x,y]);
 				var fileName = coorToName([x,y]);
