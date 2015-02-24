@@ -86,7 +86,7 @@ function poly(file){
 				var dirname = 'deferranti/'+file;
 				if(test('-d', dirname)){
 					console.log('Directory',dirname,'already present');
-					extract(file);
+					createSymlinks(file);
 				}
 				else{
 					downloadDeFerranti(file);
@@ -97,15 +97,25 @@ function poly(file){
 }
 function downloadDeFerranti(file){
 	var target = 'http://www.viewfinderpanoramas.org/dem3/'+file+'.zip';
+	console.log('Downloading', target);
 	request(target)
-	.pipe(unzip.Extract({path:'deferranti'}))
+	.pipe(fs.createWriteStream(file+'.zip'))
 	.on('close', function(){
-		rm(file+'.zip');
+		console.log('Downloaded file', file);
 		extract(file);
 	});
 }
 
-function extract(folder){
+function extract(file){
+	fs.createReadStream(file+'.zip')
+	.pipe(unzip.Extract({ path: 'deferranti' }))
+	.on('close', function(){
+		rm(file+'.zip');
+		createSymlinks(file);
+	});
+}
+
+function createSymlinks(folder){
 	console.log('Creating symlinks for', folder);
 	for(var file in files.deFerranti[folder]){
 		var source = 'deferranti/'+folder+'/'+file;

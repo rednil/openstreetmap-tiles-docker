@@ -118,13 +118,8 @@ ENV OSM_IMPORT_CACHE 800
 # Add the README
 COPY README.md /usr/local/share/doc/
 
-# Add the help file
-RUN mkdir -p /usr/local/share/doc/run
-COPY help.txt /usr/local/share/doc/run/help.txt
-
 # Add the entrypoint
 COPY sbin/* /usr/local/sbin/
-RUN ln -s /usr/local/sbin/run.sh /usr/local/sbin/run
 
 ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run.sh"]
 

@@ -37,7 +37,7 @@ Browse to: http://localhost:4242
 
 # Debugging
 
-For debugging purposes, you can start the container with the options "-t -i" and by appending "cli" in order to start into an interactive shell. The respective scripts are located under /usr/local/sbin and mostly undocumented. They are called from /usr/local/sbin/run.sh. The files "render.js" and "export.js" are not called automatically, but provide means to prerender a given region or export tiles for given zoom levels.
+For debugging purposes, you can start the container with the options "-t -i" and by appending "cli" in order to start into an interactive shell. The respective scripts are located under /usr/local/sbin and mostly undocumented. They are called from /usr/local/sbin/run.sh. The usual startup process can be triggered with "run.sh startup". The files "render.js" and "export.js" are not called automatically, but provide means to prerender a given region or export tiles for given zoom levels.
 
 # About
 

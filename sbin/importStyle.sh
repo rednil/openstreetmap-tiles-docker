@@ -11,6 +11,6 @@ if [ ! -d "$styledir/data" ]; then
 	rm $styledir/data/*.zip $styledir/data/*.tgz
 	cd /var/www
 fi
-if [ ! -d "$styledir/osm.xml" ]; then
+if [ ! -f "$styledir/osm.xml" ]; then
 	carto2mapnik.sh
 fi
