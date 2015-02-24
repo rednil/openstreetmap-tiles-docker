@@ -21,13 +21,23 @@ In particular, the following steps are taken:
 
 You have to provide 
 
+* (-p) a port on your local host that will be mapped to port 80 in the container and can be used to access the tile server
 * (-v) the absolute path to an empty working directory 
 * (-e) the name of the region you want to serve, in the notation used in the download section at [Geofabrik](http://www.geofabrik.de/), e.g. "europe/isle-of-man". Be careful, big countries or even continents need LOTS of space and time to build. This image is only tested for single, small countries.
 
 Instead of providing the name of the desired region, you can place *.pbf files for the Openstreetmap data and *.hgt files for the DEM data in the working directory manually. They should be picked up during startup.
 
+The image contains a minimalistic webpage featuring a leaflet web app, initially centered to the region you provided.
+
 # Example
+
 sudo docker run -p 4242:80 -e 'region=europe/isle-of-man' -v /home/xxx/emptydir:/var/www rednil/mapnik 
+
+Browse to: http://localhost:4242
+
+# Debugging
+
+For debugging purposes, you can start the container with the options "-t -i" and by appending "cli" in order to start into an interactive shell. The respective scripts are located under /usr/local/sbin and mostly undocumented. They are called from /usr/local/sbin/run.sh. The files "render.js" and "export.js" are not called automatically, but provide means to prerender a given region or export tiles for given zoom levels.
 
 # About
 
