@@ -2,6 +2,7 @@
 	<head>
 		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
  		<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+		<script src="region.js"></script>
 	</head>
 	<body>
 		<div id="map" style="height:100%"></div>
@@ -12,6 +13,10 @@
     				attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
     				maxZoom: 18
 			}).addTo(map);
+			var poly = L.geoJson(osmpoly);
+			poly.addTo(map);
+			map.fitBounds(poly.getBounds());
+
                 </script>
 	</body>
 </html>
