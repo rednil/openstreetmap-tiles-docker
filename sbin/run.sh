@@ -15,7 +15,7 @@ startup (){
 			/var/www/mod_tile
 
 
-		setuser www-data mkdir -p /var/www/region/$region
+		mkdir -p /var/www/region/$region
 	fi
 	download.js
 	dbSetup.sh
