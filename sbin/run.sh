@@ -1,7 +1,7 @@
 #!/bin/sh
 
 startup (){
-	chown -R www-data.www-data /var/www/
+	/var/www/
 	if [ ! -d "/var/www/region/$region" ]; then
 		deleteDb.sh
 		rm -rf \
@@ -17,8 +17,7 @@ startup (){
 
 		setuser www-data mkdir -p /var/www/region/$region
 	fi
-
-	setuser www-data download.js
+	download.js
 	dbSetup.sh
 	importStyle.sh
 	createContours.sh
