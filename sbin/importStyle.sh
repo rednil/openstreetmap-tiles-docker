@@ -7,7 +7,7 @@ fi
 if [ ! -d "$styledir/data" ]; then
 	echo "Executing $styledir/.get-shapefiles.sh"
 	cd $styledir
-	setuser www-data $styledir/get-shapefiles.sh
+	$styledir/get-shapefiles.sh
 	rm $styledir/data/*.zip $styledir/data/*.tgz
 	cd /var/www
 fi
