@@ -86,7 +86,6 @@ RUN sed -i -e 's/local   all             all                                    
 # Tune postgresql
 COPY postgresql.conf.sed /tmp/
 RUN sed --file /tmp/postgresql.conf.sed --in-place /etc/postgresql/9.3/main/postgresql.conf
-RUN mkdir /etc/ssl/private-copy; mv /etc/ssl/private/* /etc/ssl/private-copy/; rm -r /etc/ssl/private; mv /etc/ssl/private-copy /etc/ssl/private; chmod -R 0700 /etc/ssl/private; chown -R postgres /etc/ssl/private
 
 # Define the application logging logic
 COPY syslog-ng.conf /etc/syslog-ng/conf.d/local.conf
@@ -126,6 +125,10 @@ ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run.sh"]
 
 # Add the webroot, will be copied to /var/www at runtime
 COPY html /usr/local/src/html
+
+# workaround for aufs bug from
+# https://github.com/docker/docker/issues/783#issuecomment-56013588
+RUN mkdir /etc/ssl/private-copy; mv /etc/ssl/private/* /etc/ssl/private-copy/; rm -r /etc/ssl/private; mv /etc/ssl/private-copy /etc/ssl/private; chmod -R 0700 /etc/ssl/private; chown -R postgres /etc/ssl/private
 
 # Default to assembling a running server
 CMD ["startup"]
