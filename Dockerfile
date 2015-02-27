@@ -66,6 +66,8 @@ RUN npm install -g carto shelljs minimist bower point-in-polygon request unzip
 
 # Install the Mapnik stylesheet
 RUN cd /usr/local/src && git clone https://github.com/rednil/openstreetmap-carto.git mapnik-style
+RUN cd /usr/local/src/mapnik-style && ./get-shapefiles.sh
+RUN cd /usr/local/src/mapnik-style/data/ && rm *.zip *.tgz
 
 # Configure renderd
 COPY renderd.conf.sed /tmp/

@@ -1,7 +1,8 @@
 #!/bin/sh
 
+cd /var/www
+
 startup (){
-	/var/www/
 	if [ ! -d "/var/www/region/$region" ]; then
 		deleteDb.sh
 		rm -rf \

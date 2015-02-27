@@ -83,7 +83,7 @@ function poly(file){
 			console.dir(files.deFerranti);
 			deFerranti = files.deFerranti;
 			for(var file in deFerranti){
-				var dirname = 'deferranti/'+file;
+				var dirname = mainDir+'/deferranti/'+file;
 				if(test('-d', dirname)){
 					console.log('Directory',dirname,'already present');
 					createSymlinks(file);
