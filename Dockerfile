@@ -157,41 +157,8 @@ RUN update-service --add /etc/sv/apache2
 COPY renderd /etc/sv/renderd
 RUN update-service --add /etc/sv/renderd
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y \
-apache2-dev \
-autoconf \
-build-essential \
-git-core \
-libagg-dev \
-libboost-dev \
-libboost-filesystem-dev \
-libboost-program-options-dev \
-libboost-python-dev \
-libboost-regex-dev \
-libboost-system-dev \
-libboost-thread-dev \
-libbz2-dev \
-libcairo-dev \
-libcairomm-1.0-dev \
-libfreetype6-dev \
-libgdal-dev \
-libgdal1-dev \
-libgeos++-dev \
-libgeos-dev \
-libgeos-dev \
-libicu-dev \
-liblua5.2-dev \
-libmapnik-dev \
-libpng12-dev \
-libpq-dev \
-libproj-dev \
-libprotobuf-c0-dev \
-libtiff4-dev \
-libxml2-dev 
-
 # Clean up APT when done
-RUN apt-get autoremove -y && \
-apt-get clean && \
+RUN apt-get clean && \
 rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Expose the webserver and database ports
