@@ -8,31 +8,83 @@
 # <http://switch2osm.org/serving-tiles/manually-building-a-tile-server-12-04/>.
 #
 
-FROM phusion/baseimage:0.9.15
-MAINTAINER Homme Zwaagstra <hrz@geodata.soton.ac.uk>
+FROM phusion/baseimage:0.9.16
+MAINTAINER Christian Linder <rednil@onyown.de>
 
 # Set the locale. This affects the encoding of the Postgresql template
 # databases.
 ENV LANG C.UTF-8
 RUN update-locale LANG=C.UTF-8
 
-# Ensure `add-apt-repository` is present
-RUN apt-get update -y
-RUN apt-get upgrade -y
-RUN apt-get install -y software-properties-common python-software-properties
-
-RUN apt-get install -y libboost-dev libboost-filesystem-dev libboost-program-options-dev libboost-python-dev libboost-regex-dev libboost-system-dev libboost-thread-dev
-
-# Install remaining dependencies
-RUN apt-get install -y subversion git-core tar unzip wget bzip2 build-essential autoconf libtool libxml2-dev libgeos-dev libpq-dev libbz2-dev munin-node munin libprotobuf-c0-dev protobuf-c-compiler libfreetype6-dev libpng12-dev libtiff4-dev libicu-dev libgdal-dev libcairo-dev libcairomm-1.0-dev apache2 apache2-dev libagg-dev liblua5.2-dev ttf-unifont
-
-RUN apt-get install -y autoconf apache2-dev libtool libxml2-dev libbz2-dev libgeos-dev libgeos++-dev libproj-dev gdal-bin libgdal1-dev mapnik-utils python-mapnik libmapnik-dev python-gdal npm python-yaml ttf-dejavu fonts-droid ttf-unifont fonts-sipa-arundina fonts-sil-padauk fonts-khmeros ttf-indic-fonts-core ttf-tamil-fonts ttf-kannada-fonts fonts-taml-tscu fonts-tibetan-machine
-
-# Install postgresql and postgis
-RUN apt-get install -y postgresql-9.3-postgis-2.1 postgresql-contrib postgresql-server-dev-9.3
+# Install dependencies
+RUN DEBIAN_FRONTEND=noninteractive apt-get update -y && apt-get upgrade -y && apt-get install -y \
+apache2 \
+apache2-dev \
+autoconf \
+build-essential \
+bzip2 \
+fonts-droid \
+fonts-khmeros \
+fonts-sil-padauk \
+fonts-sipa-arundina \
+fonts-taml-tscu \
+fonts-tibetan-machine \
+gdal-bin \
+git-core \
+libagg-dev \
+libboost-dev \
+libboost-filesystem-dev \
+libboost-program-options-dev \
+libboost-python-dev \
+libboost-regex-dev \
+libboost-system-dev \
+libboost-thread-dev \
+libbz2-dev \
+libcairo-dev \
+libcairomm-1.0-dev \
+libfreetype6-dev \
+libgdal-dev \
+libgdal1-dev \
+libgeos++-dev \
+libgeos-dev \
+libgeos-dev \
+libicu-dev \
+liblua5.2-dev \
+libmapnik-dev \
+libpng12-dev \
+libpq-dev \
+libproj-dev \
+libprotobuf-c0-dev \
+libtiff4-dev \
+libtool \
+libtool \
+libxml2-dev \
+mapnik-utils \
+munin \
+munin-node \
+npm \
+postgresql-9.3-postgis-2.1 \
+postgresql-contrib \
+postgresql-server-dev-9.3 \
+protobuf-c-compiler \
+python-gdal \
+python-mapnik \
+python-software-properties \
+python-yaml \
+software-properties-common \
+subversion \
+tar \
+ttf-dejavu \
+ttf-indic-fonts-core \
+ttf-kannada-fonts \
+ttf-tamil-fonts \
+ttf-unifont \
+ttf-unifont \
+unzip \
+wget 
 
 # Install osm2pgsql
-RUN cd /tmp && git clone git://github.com/openstreetmap/osm2pgsql.git
+RUN cd /tmp && git clone git://github.com/openstreetmap/osm2pgsql.git 
 RUN cd /tmp/osm2pgsql && \
     ./autogen.sh && \
     ./configure && \
@@ -105,8 +157,42 @@ RUN update-service --add /etc/sv/apache2
 COPY renderd /etc/sv/renderd
 RUN update-service --add /etc/sv/renderd
 
+RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y \
+apache2-dev \
+autoconf \
+build-essential \
+git-core \
+libagg-dev \
+libboost-dev \
+libboost-filesystem-dev \
+libboost-program-options-dev \
+libboost-python-dev \
+libboost-regex-dev \
+libboost-system-dev \
+libboost-thread-dev \
+libbz2-dev \
+libcairo-dev \
+libcairomm-1.0-dev \
+libfreetype6-dev \
+libgdal-dev \
+libgdal1-dev \
+libgeos++-dev \
+libgeos-dev \
+libgeos-dev \
+libicu-dev \
+liblua5.2-dev \
+libmapnik-dev \
+libpng12-dev \
+libpq-dev \
+libproj-dev \
+libprotobuf-c0-dev \
+libtiff4-dev \
+libxml2-dev 
+
 # Clean up APT when done
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get autoremove -y && \
+apt-get clean && \
+rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Expose the webserver and database ports
 EXPOSE 80 5432
