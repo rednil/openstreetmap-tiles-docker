@@ -1,12 +1,12 @@
-DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/*.deb
+# Verify that Mapnik has been installed correctly
 python -c 'import mapnik'
-# Configure renderd
-cd /etc && sed --file /tmp/renderd.conf.sed --in-place renderd.conf
 # Create the files required for the mod_tile system to run
 mkdir /var/run/renderd && chown www-data: /var/run/renderd
 mkdir /var/www/mod_tile && chown www-data /var/www/mod_tile
-# Configure mod_tile
-a2enmod mod_tile
+# Configure renderd
+cd /etc && sed --file /tmp/renderd.conf.sed --in-place renderd.conf
+# Configure apache
+cd /etc/apache2/sites-available && sed --file /tmp/tileserver_site.conf.sed --in-place tileserver_site.conf
 # Ensure the webserver user can connect to the gis database
 sed -i -e 's/local   all             all                                     peer/local gis www-data peer/' /etc/postgresql/9.3/main/pg_hba.conf
 # Tune postgresql
@@ -21,5 +21,10 @@ update-service --add /etc/sv/apache2
 update-service --add /etc/sv/renderd
 # workaround for aufs bug from
 # https://github.com/docker/docker/issues/783#issuecomment-56013588
-mkdir /etc/ssl/private-copy; mv /etc/ssl/private/* /etc/ssl/private-copy/; rm -r /etc/ssl/private; mv /etc/ssl/private-copy /etc/ssl/private; chmod -R 0700 /etc/ssl/private; chown -R postgres /etc/ssl/private
+mkdir /etc/ssl/private-copy
+mv /etc/ssl/private/* /etc/ssl/private-copy/
+rm -r /etc/ssl/private
+mv /etc/ssl/private-copy /etc/ssl/private
+chmod -R 0700 /etc/ssl/private
+chown -R postgres /etc/ssl/private
 

@@ -2,15 +2,11 @@ styledir=/var/www/mapnik-style
 if [ ! -d "$styledir" ]; then
 	echo "Copying /usr/local/src/mapnik/style to $styledir"
 	cp -r /usr/local/src/mapnik-style $styledir
-	chown -R www-data.www-data $styledir
 fi
 if [ ! -d "$styledir/data" ]; then
-	echo "Executing $styledir/.get-shapefiles.sh"
-	cd $styledir
-	$styledir/get-shapefiles.sh
-	rm $styledir/data/*.zip $styledir/data/*.tgz
-	cd /var/www
+	ln -s /etc/mapnik-osm-carto-data/data $styledir
 fi
+chown -R www-data.www-data $styledir
 if [ ! -f "$styledir/osm.xml" ]; then
 	carto2mapnik.sh
 fi
