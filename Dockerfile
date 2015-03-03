@@ -25,6 +25,7 @@ bzip2 \
 fonts-taml-tscu \
 fonts-tibetan-machine \
 git-core \
+mapnik-utils \
 npm \
 python-gdal \
 python-mapnik \
@@ -40,7 +41,7 @@ cd /etc/mapnik-osm-carto-data/data && rm *.zip *.tgz
 RUN ln -s /usr/bin/nodejs /usr/bin/node && npm install -g carto shelljs minimist point-in-polygon request unzip
 
 # Install the Mapnik stylesheet
-RUN cd /usr/local/src && git clone https://github.com/rednil/openstreetmap-carto.git mapnik-style
+RUN cd /usr/local/src && git clone --depth=1 https://github.com/rednil/openstreetmap-carto.git mapnik-style
 
 # Copy all required files into the docker container
 COPY filesystem /
@@ -57,4 +58,4 @@ VOLUME ["/var/www"]
 # Set the osm2pgsql import cache size in MB. Used in `run import`.
 ENV OSM_IMPORT_CACHE 800
 
-
+CMD ["/sbin/my_init"]

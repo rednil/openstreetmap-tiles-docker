@@ -1,3 +1,4 @@
+#!/bin/sh
 # Verify that Mapnik has been installed correctly
 python -c 'import mapnik'
 # Create the files required for the mod_tile system to run
@@ -21,4 +22,4 @@ rm -r /etc/ssl/private
 mv /etc/ssl/private-copy /etc/ssl/private
 chmod -R 0700 /etc/ssl/private
 chown -R postgres /etc/ssl/private
-
+createRunitLinks.sh

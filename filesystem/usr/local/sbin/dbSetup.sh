@@ -3,7 +3,7 @@
 mkdir -p /var/www/milestones
 milestonefile="/var/www/milestones/dbSetup"
 
-if [ ! -f "$milestonefile" ]; then
+if [ ! -f "$milestonefile" ] && [ -f /var/www/*.pbf ]; then
 	echo "Setting up POSTGRES DB"
 	deleteDb.sh
 	initDb.sh 

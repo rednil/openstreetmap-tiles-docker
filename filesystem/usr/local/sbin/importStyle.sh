@@ -1,3 +1,5 @@
+#!/bin/sh
+
 styledir=/var/www/mapnik-style
 if [ ! -d "$styledir" ]; then
 	echo "Copying /usr/local/src/mapnik/style to $styledir"
