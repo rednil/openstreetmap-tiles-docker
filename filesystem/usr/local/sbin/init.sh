@@ -13,12 +13,6 @@ sed -i -e 's/local   all             all                                     pee
 sed --file /tmp/postgresql.conf.sed --in-place /etc/postgresql/9.3/main/postgresql.conf
 # application logging logic is defined in /etc/syslog-ng/conf.d/local.conf
 rm -rf /var/log/postgresql
-# Create a `postgresql` `runit` service
-update-service --add /etc/sv/postgresql
-# Create an `apache2` `runit` service
-update-service --add /etc/sv/apache2
-# Create a `renderd` `runit` service
-update-service --add /etc/sv/renderd
 # workaround for aufs bug from
 # https://github.com/docker/docker/issues/783#issuecomment-56013588
 mkdir /etc/ssl/private-copy

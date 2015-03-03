@@ -57,7 +57,4 @@ VOLUME ["/var/www"]
 # Set the osm2pgsql import cache size in MB. Used in `run import`.
 ENV OSM_IMPORT_CACHE 800
 
-ENTRYPOINT ["/sbin/my_init", "--", "/usr/local/sbin/run.sh"]
 
-# Default to assembling a running server
-CMD ["startup"]

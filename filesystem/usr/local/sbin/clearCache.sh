@@ -1,4 +1,4 @@
-sv stop renderd
+service renderd stop
 rm -rf /var/www/mod_tile/*
-sv start renderd
+service renderd start
 
