@@ -47,9 +47,4 @@ includes:
 
 * Postgresql 9.3
 * Apache 2.2
-* The latest [Osm2pgsql](http://wiki.openstreetmap.org/wiki/Osm2pgsql) code (at
-  the time of image creation)
-* The latest [Mapnik](http://mapnik.org/) code (at the time of image creation)
-* The latest [Mod_Tile](http://wiki.openstreetmap.org/wiki/Mod_tile) code (at
-  the time of image creation)
-
+* Renderd and mod_tile, installed from ppa:kakrueger/openstreetmap
