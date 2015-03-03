@@ -31,13 +31,13 @@ The image contains a minimalistic webpage featuring a leaflet web app, initially
 
 # Example
 
-sudo docker run -p 4242:80 -e 'region=europe/isle-of-man' -v /home/xxx/emptydir:/var/www rednil/mapnik 
+sudo docker run -p 4242:80 -e 'region=europe/isle-of-man' -v /home/xxx/emptydir:/var/www rednil/topotileserver 
 
 Browse to: http://localhost:4242
 
 # Debugging
 
-For debugging purposes, you can start the container with the options "-t -i" and by appending "cli" in order to start into an interactive shell. The respective scripts are located under /usr/local/sbin and mostly undocumented. They are called from /usr/local/sbin/run.sh. The usual startup process can be triggered with "run.sh startup". The files "render.js" and "export.js" are not called automatically, but provide means to prerender a given region or export tiles for given zoom levels.
+For debugging purposes, you can start the container with the options "-ti" and by appending "/bin/bash" at the end in order to start into an interactive shell. All important scripts are located under /usr/local/sbin and mostly undocumented. init.sh is called during build, the other scripts are called via the phusion image init procedure from links in "/etc/my_init.d". Please note that some of the scripts set flags in "/var/www/milestones" that prevent them from running again if you restart the container with the same working directory. If you want to debug the scripts manually, you have to remove the respective milestones. The files "render.js" and "export.js" are not called automatically, but provide means to prerender a given region or export tiles for given zoom level (work in progress).
 
 # About
 
