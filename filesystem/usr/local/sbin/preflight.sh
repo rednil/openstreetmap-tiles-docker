@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# workaround for aufs bug from
+# https://github.com/docker/docker/issues/783#issuecomment-56013588
+mkdir /etc/ssl/private-copy; mv /etc/ssl/private/* /etc/ssl/private-copy/; rm -r /etc/ssl/private; mv /etc/ssl/private-copy /etc/ssl/private; chmod -R 0700 /etc/ssl/private; chown -R postgres /etc/ssl/private
+
 mkdir -p /var/www/log
 if [ ! -d "/var/www/html" ]; then
 	echo "Copying html from /usr/local/src to /var/www"
