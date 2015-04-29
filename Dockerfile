@@ -1,5 +1,3 @@
-## -*- docker-image-name: "homme/openstreetmap-tiles:latest" -*-
-
 ##
 # The OpenStreetMap Tile Server
 #
@@ -8,7 +6,8 @@
 # <http://switch2osm.org/serving-tiles/manually-building-a-tile-server-12-04/>.
 #
 
-FROM phusion/baseimage:0.9.16
+FROM rednil/baseimage
+
 MAINTAINER Christian Linder <rednil@onyown.de>
 
 # Set the locale. This affects the encoding of the Postgresql template
@@ -40,14 +39,10 @@ cd /etc/mapnik-osm-carto-data/data && rm *.zip *.tgz
 # Install node and some npm modules
 RUN ln -s /usr/bin/nodejs /usr/bin/node && npm install -g carto shelljs minimist point-in-polygon request unzip
 
+ENV OPENSTREETMAP_CARTO_VERSION=v2.29.1
+
 # Install the Mapnik stylesheet
-RUN cd /usr/local/src && git clone --depth=1 https://github.com/rednil/openstreetmap-carto.git mapnik-style
-
-# Copy all required files into the docker container
-COPY filesystem /
-
-# do all init work that doesn't require huge downloads 
-RUN /usr/local/sbin/init.sh
+RUN cd /usr/local/src && git clone -b $OPENSTREETMAP_CARTO_VERSION --depth=1 https://github.com/gravitystorm/openstreetmap-carto.git mapnik-style
 
 # Expose the webserver and database ports
 EXPOSE 80 5432
@@ -59,3 +54,10 @@ VOLUME ["/var/www"]
 ENV OSM_IMPORT_CACHE 800
 
 CMD ["/sbin/my_init"]
+
+# Copy all required files into the docker container
+COPY filesystem /
+
+# do all init work that doesn't require huge downloads 
+RUN /usr/local/sbin/build.sh
+

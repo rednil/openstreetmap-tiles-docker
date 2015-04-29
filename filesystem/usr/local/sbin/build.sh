@@ -1,4 +1,5 @@
 #!/bin/sh
+sed-build.sh
 # Verify that Mapnik has been installed correctly
 python -c 'import mapnik'
 # Create the files required for the mod_tile system to run

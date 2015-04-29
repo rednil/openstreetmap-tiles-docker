@@ -1,1 +1,1 @@
-sudo docker build -t topotileserver .
+sudo docker build -t rednil/topotileserver .

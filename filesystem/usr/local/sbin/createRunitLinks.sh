@@ -1,4 +1,4 @@
-i=10
+i=20
 for cmd in \
 	preflight.sh \
 	checkForNewRegion.sh \
@@ -6,7 +6,6 @@ for cmd in \
 	deferranti.sh \
 	dbSetup.sh \
 	importStyle.sh \
-	createContours.sh \
 	createRelief.sh \
 	createHillshade.sh
 do
