@@ -4,7 +4,7 @@
       <<: *osm2pgsql
       table: |-
         (SELECT way, height, height as name 
-          FROM contours 
+          FROM contours10 
           WHERE height::integer % 10 = 0 AND height::integer % 50 != 0
           ) AS "contours10"
     srs: "+proj=latlong +datum=WGS84"
@@ -14,7 +14,7 @@
       <<: *osm2pgsql
       table: |-
         (SELECT way, height, height as name 
-          FROM contours 
+          FROM contours10 
           WHERE height::integer % 50 = 0 AND height::integer % 100 != 0
           ) AS "contours50"
     srs: "+proj=latlong +datum=WGS84"
@@ -24,7 +24,7 @@
       <<: *osm2pgsql
       table: |-
         (SELECT way, height, height as name 
-          FROM contours 
+          FROM contours100
           WHERE height::integer % 100 = 0 AND height::integer % 500 != 0
           ) AS "contours100"
     srs: "+proj=latlong +datum=WGS84"
@@ -34,7 +34,7 @@
       <<: *osm2pgsql
       table: |-
         (SELECT way, height, height as name 
-          FROM contours 
+          FROM contours100
           WHERE height::integer % 500 = 0 AND height::integer % 1000 != 0
           ) AS "contours500"
     srs: "+proj=latlong +datum=WGS84"
@@ -44,7 +44,6 @@
       <<: *osm2pgsql
       table: |-
         (SELECT way, height, height as name 
-          FROM contours 
-          WHERE height::integer % 1000 = 0
+          FROM contours1000 
           ) AS "contours1000"
     srs: "+proj=latlong +datum=WGS84"
