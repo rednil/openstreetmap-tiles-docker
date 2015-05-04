@@ -8,6 +8,7 @@ asweb="setuser www-data"
 name="${tmpDir}/contours"
 
 if [ ! -f "$milestonefile" ]; then
+	mkdir -p ${tmpdir}
 	for i in 1000 100 10
 	do
 		$asweb psql -d gis -c "DROP TABLE contours$i;"
