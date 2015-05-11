@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 imported_something=false
 for f in /var/www/*.pbf

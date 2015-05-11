@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 milestonefile="/var/www/milestones/geofabrik"
 

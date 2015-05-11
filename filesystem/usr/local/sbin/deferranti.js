@@ -1,6 +1,6 @@
 #!/usr/local/bin/shjs
 require('shelljs/global');
-require('/var/www/region.js');
+require('/var/www/html/region.js');
 
 var fs = require('fs');
 
@@ -25,6 +25,7 @@ files = getFileList(osmpoly.geometry.coordinates);
 console.log('The following files are required:');
 deFerranti = files.deFerranti;
 console.dir(deFerranti);
+
 for(var file in deFerranti){
 	var dirname = mainDir+'/deferranti/'+file;
 	if(test('-d', dirname)){
@@ -70,7 +71,7 @@ function createSymlinks(folder){
 function getBB(poly){
 	var bbox = {
 		xmax: -360,
-	    ymax: -360,
+		ymax: -360,
 		xmin: 360,
 		ymin: 360
 	};
@@ -88,19 +89,17 @@ function getFileList(poly){
 	var bb = getBB(poly);
 	console.log('Bounding Box:');
 	console.dir(bb);
+	console.log('DEM_BOUNDING_BOX: '+env.DEM_BOUNDING_BOX);
 	var deFerranti = {};
 	var hgtList = {};
 	for(var x=Math.floor(bb.xmin); x<=Math.floor(bb.xmax); x++){
 		for(var y=Math.floor(bb.ymin); y<=Math.floor(bb.ymax); y++){
+			var tilePoly = [[x,y],[x,y+1],[x+1,y],[x+1,y+1]];
 			// check if one of the four corners of a given 
-			// tile is inside the polygon
-			var required = (
-				inside([x,y], poly) ||
-				inside([x,y+1], poly) ||
-				inside([x+1,y], poly) ||
-				inside([x+1,y+1], poly) 
-			);
-			//console.log('checked', x, y, required);
+			// tile is inside the polygon or one of the points
+			// of the polygon is inside the four courners of the tile
+			var useBB = env.DEM_BOUNDING_BOX===true || env.DEM_BOUNDING_BOX==="true";
+			var required = useBB || polyOverlap(tilePoly, poly);
 			if(required){
 				var zipName = getDeFerrantiName([x,y]);
 				var fileName = coorToName([x,y]);
@@ -117,6 +116,18 @@ function getFileList(poly){
 		hgtFiles: hgtList
 	});
 }
+
+function polyOverlap(a,b){
+	return pointOfFirstInSecond(a,b) || pointOfFirstInSecond(b,a);
+}
+function pointOfFirstInSecond(first, second){
+	for (var i=0; i<first.length; i++){
+		if(inside(first[i], second)){
+			return true;
+		}
+	}
+}
+
 function coorToName(coor){
 	return (coor[1]>0?'N':'S')+pad(coor[1],2)+(coor[0]>0?'E':'W')+pad(coor[0],3)+'.hgt';
 }

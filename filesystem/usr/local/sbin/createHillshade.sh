@@ -1,17 +1,17 @@
-#!/bin/sh
+#!/bin/bash
 
-tmpdir=/var/www/tmp
-styledir=/var/www/mapnik-style
-warped=${tmpdir}/warped.tif
+source /usr/local/sbin/env.sh
+
+warped=${tmpDir}/warped.tif
 
 createWarped.sh
-if [ ! -f "${styledir}/hillshadeMax.tif" ]; then
-	gdaldem hillshade -co COMPRESS=LZW -co PREDICTOR=2 ${tmpdir}/warped.tif ${styledir}/hillshadeMax.tif
+if [ ! -f "${styleDir}/hillshadeMax.tif" ]; then
+	gdaldem hillshade -co COMPRESS=LZW -co PREDICTOR=2 ${tmpDir}/warped.tif ${styleDir}/hillshadeMax.tif
 fi
-if [ ! -f "${styledir}/hillshadeMin.tif" ]; then
-	gdal_translate -outsize 10% 10% ${styledir}/hillshadeMax.tif ${styledir}/hillshadeMin.tif
+if [ ! -f "${styleDir}/hillshadeMin.tif" ]; then
+	gdal_translate -outsize 10% 10% ${styleDir}/hillshadeMax.tif ${styleDir}/hillshadeMin.tif
 fi
-if [ ! -f "${styledir}/hillshadeMed.tif" ]; then
-	gdal_translate -outsize 50% 50% ${styledir}/hillshadeMax.tif ${styledir}/hillshadeMed.tif
+if [ ! -f "${styleDir}/hillshadeMed.tif" ]; then
+	gdal_translate -outsize 50% 50% ${styleDir}/hillshadeMax.tif ${styleDir}/hillshadeMed.tif
 fi
 

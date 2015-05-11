@@ -29,7 +29,7 @@ fs.readFile(process.argv[2], 'utf8', function(err, data){
 			}
 		});
 		var jsonp = 'osmpoly='+JSON.stringify(poly2geojson(poly, process.argv[2]));
-		fs.writeFile('/var/www/region.js', jsonp, function(err){
+		fs.writeFile('/var/www/html/region.js', jsonp, function(err){
 			if(err){
 				console.log(err);
 			}

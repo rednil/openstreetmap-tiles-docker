@@ -3,18 +3,10 @@
 @medmax: 12;
 
 #contours1000 {
-	line-color: @contour;
-	line-smooth: 1;
-	line-opacity: 0.2;
-	line-width: 0.5;
-	text-halo-radius: 1;
-	text-face-name: @book-fonts;
-	text-name: [height];
-	text-size: 8;
-	text-placement: line;
-	text-fill: @contour;
-
 	[zoom >= 8] {
+		line-color: @contour;
+		line-smooth: 1;
+		line-width: 0.5;
 		line-opacity: 0.4;
 	}
 	[zoom >= 10] {
@@ -22,6 +14,12 @@
 	}
 	[zoom >= 12] {
 		line-opacity: 0.8;
+		text-halo-radius: 1;
+		text-face-name: @book-fonts;
+		text-name: [height];
+		text-size: 8;
+		text-placement: line;
+		text-fill: @contour;
 	}
 }
 

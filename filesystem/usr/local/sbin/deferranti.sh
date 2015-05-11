@@ -1,10 +1,11 @@
-#!/bin/sh
+#!/bin/bash
+source /usr/local/sbin/env.sh
 
-milestonefile="/var/www/milestones/deferranti"
+milestoneFile="$milestoneDir/deferranti"
 
-if [ -f "/var/www/region.js" ] && [ ! -f "$milestonefile" ]; then
+if [ -f "$regionFile" ] && [ ! -f "$milestoneFile" ]; then
 	deferranti.js
-	touch $milestonefile
+	touch $milestoneFile
 fi
 
 

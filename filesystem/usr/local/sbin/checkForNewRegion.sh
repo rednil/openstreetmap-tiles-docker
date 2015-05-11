@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 cd /var/www
 # if a region was handed in and it is different from before,
 # start from scratch

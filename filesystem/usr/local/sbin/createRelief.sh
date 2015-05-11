@@ -1,21 +1,23 @@
-#!/bin/sh
+#!/bin/bash
 
-tmpdir=/var/www/tmp
-styledir=/var/www/mapnik-style
-warped=${tmpdir}/warped.tif
+source /usr/local/sbin/env.sh
+
+tmpDir=/var/www/tmp
+styleDir=/var/www/mapnik-style
+warped=${tmpDir}/warped.tif
 
 createWarped.sh
-if [ ! -f "${tmpdir}/reliefLZW.tif" ]; then
-	gdaldem color-relief -co COMPRESS=LZW  ${tmpdir}/warped.tif ${styledir}/relief-colors.txt ${tmpdir}/reliefLZW.tif
+if [ ! -f "${tmpDir}/reliefLZW.tif" ]; then
+	gdaldem color-relief -co COMPRESS=LZW  ${tmpDir}/warped.tif ${styleDir}/relief-colors.txt ${tmpDir}/reliefLZW.tif
 fi
-if [ ! -f "${styledir}/reliefMin.tif" ]; then
-	gdal_translate -co COMPRESS=JPEG -outsize 10% 10% ${tmpdir}/reliefLZW.tif ${styledir}/reliefMin.tif
+if [ ! -f "${styleDir}/reliefMin.tif" ]; then
+	gdal_translate -co COMPRESS=JPEG -outsize 10% 10% ${tmpDir}/reliefLZW.tif ${styleDir}/reliefMin.tif
 fi
-if [ ! -f "${styledir}/reliefMed.tif" ]; then
-	gdal_translate -co COMPRESS=JPEG -outsize 50% 50% ${tmpdir}/reliefLZW.tif ${styledir}/reliefMed.tif
+if [ ! -f "${styleDir}/reliefMed.tif" ]; then
+	gdal_translate -co COMPRESS=JPEG -outsize 50% 50% ${tmpDir}/reliefLZW.tif ${styleDir}/reliefMed.tif
 fi
-if [ ! -f "${styledir}/reliefMax.tif" ]; then
-	gdal_translate -co COMPRESS=JPEG ${tmpdir}/reliefLZW.tif ${styledir}/reliefMax.tif
+if [ ! -f "${styleDir}/reliefMax.tif" ]; then
+	gdal_translate -co COMPRESS=JPEG ${tmpDir}/reliefLZW.tif ${styleDir}/reliefMax.tif
 fi
 
 
