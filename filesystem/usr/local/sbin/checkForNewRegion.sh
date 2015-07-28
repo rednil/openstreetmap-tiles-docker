@@ -3,6 +3,7 @@ cd /var/www
 # if a region was handed in and it is different from before,
 # start from scratch
 if [ -n "$region" ] && [ ! -d "/var/www/region/$region" ]; then
+	echo "New region, deleting EVERYTHING"
 	deleteDb.sh
 	rm -rf \
 		/var/www/milestones \
